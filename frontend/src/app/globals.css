@@ -5,13 +5,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #141A21;
-  --foreground: #FAFAFA;
+  --background: #f1f5f9;
+  --foreground: #1e293b;
   --primary: #790026;
   --primary-light: #B73852;
-  --secondary: #38B79D;
-  --paper: #28323D;
-  --surface: #1C252E;
+  --secondary: #16a34a;
+  --paper: #ffffff;
+  --surface: #ffffff;
 }
 
 body {
@@ -26,8 +26,8 @@ body {
 
 /* Custom scrollbar matching plataforma-tramites-estado-core-frontend */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   background-color: transparent;
 }
 
@@ -36,8 +36,8 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #556270;
-  border-radius: 5px;
+  background-color: #cbd5e1;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -46,15 +46,16 @@ body {
 
 /* Platform standard styling classes */
 .platform-card {
-  background-color: #1C252E;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease-in-out;
 }
 
 .platform-card-hover:hover {
   border-color: rgba(183, 56, 82, 0.4);
-  box-shadow: 0 8px 24px -4px rgba(121, 0, 38, 0.15);
+  box-shadow: 0 8px 24px -4px rgba(121, 0, 38, 0.08);
   transform: translateY(-1px);
 }
 
@@ -70,7 +71,7 @@ body {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #790026, #B73852, #38B79D);
+  background: linear-gradient(90deg, #790026, #B73852, #16a34a);
 }
 
 /* Blink / pulse animation from plataforma-tramites-estado-core-frontend */
@@ -88,12 +89,12 @@ body {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 10px rgba(56, 183, 157, 0.6);
+    box-shadow: 0 0 10px rgba(22, 163, 74, 0.5);
   }
   50% {
     opacity: 0.8;
     transform: scale(1.08);
-    box-shadow: 0 0 20px rgba(56, 183, 157, 0.9);
+    box-shadow: 0 0 18px rgba(22, 163, 74, 0.8);
   }
 }
 
@@ -101,12 +102,12 @@ body {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 10px rgba(186, 27, 27, 0.7);
+    box-shadow: 0 0 10px rgba(186, 27, 27, 0.5);
   }
   50% {
     opacity: 0.8;
     transform: scale(1.08);
-    box-shadow: 0 0 24px rgba(186, 27, 27, 1);
+    box-shadow: 0 0 20px rgba(186, 27, 27, 0.8);
   }
 }
 

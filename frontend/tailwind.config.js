@@ -9,12 +9,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#141A21',
-        surface: '#1C252E',
-        'surface-hover': '#24303c',
-        paper: '#28323D',
-        border: 'rgba(255, 255, 255, 0.08)',
-        'border-light': 'rgba(0, 0, 0, 0.08)',
+        background: '#f1f5f9',
+        surface: '#ffffff',
+        'surface-hover': '#f8fafc',
+        paper: '#ffffff',
+        border: '#e2e8f0',
+        'border-subtle': 'rgba(0, 0, 0, 0.06)',
         primary: {
           50: '#fdf2f4',
           100: '#fbe6ea',
@@ -29,28 +29,28 @@ module.exports = {
           DEFAULT: '#790026',
           light: '#B73852',
           dark: '#580820',
-          hover: '#ae4f68',
+          hover: '#9c1b3e',
         },
         secondary: {
           DEFAULT: '#B73852',
-          emerald: '#38B79D',
+          emerald: '#16a34a',
         },
         platform: {
-          bg: '#141A21',
-          bgSecondary: '#1C252E',
-          paper: '#28323D',
+          bg: '#f1f5f9',
+          bgSecondary: '#ffffff',
+          paper: '#ffffff',
           primary: '#790026',
           primaryLight: '#B73852',
           selected: '#ae4f68',
           accent: '#b0697f',
-          textPrimary: '#FAFAFA',
-          textSecondary: '#9FA6AD',
+          textPrimary: '#1e293b',
+          textSecondary: '#64748b',
         },
         status: {
-          up: '#10b981',
-          degraded: '#f59e0b',
+          up: '#16a34a',
+          degraded: '#d97706',
           down: '#BA1B1B',
-          timeout: '#8b5cf6',
+          timeout: '#7c3aed',
         }
       },
       fontFamily: {
@@ -63,8 +63,9 @@ module.exports = {
         '4xl': '28px',
       },
       boxShadow: {
-        'platform': '0px 4px 20px rgba(0, 0, 0, 0.15)',
-        'platform-glow': '0px 0px 25px rgba(121, 0, 38, 0.25)',
+        'platform': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03)',
+        'platform-card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+        'platform-glow': '0 0 20px rgba(121, 0, 38, 0.12)',
       }
     },
   },
