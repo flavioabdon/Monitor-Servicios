@@ -1,0 +1,194 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum ServiceType {
+  WEB_INSTITUCIONAL   // Simple HTTP check - portal activo
+  SISTEMA_WEB         // HTTP + keyword en body
+  API_JSON            // REST API con validación de body JSON
+  SOAP_WSDL           // Verifica que el WSDL sea accesible y válido
+  SOAP_OPERACION      // Ejecuta una operación SOAP con envelope
+  LOGIN_CHECK         // POST login, evalúa respuesta lógica
+  PING                // ICMP ping por dominio o IP
+  SSL_CERT            // Solo verifica certificado SSL
+  DNS                 // Solo verifica resolución DNS
+}
+
+enum CheckStatus {
+  UP          // Servicio respondió correctamente
+  DEGRADED    // Respondió pero con error lógico (ej: login 200 + error)
+  DOWN        // No respondió o error HTTP
+  TIMEOUT     // Superó el tiempo límite
+  UNKNOWN     // Estado inicial o error de probe
+}
+
+enum AlertType {
+  DOWN
+  DEGRADED
+  SLOW          // Tiempo de respuesta alto
+  SSL_EXPIRING  // Certificado por vencer
+  DNS_FAIL
+}
+
+// ─────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ServiceGroup {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  color       String?   @default("#6366f1") // color del grupo en UI
+  createdAt   DateTime  @default(now())
+  services    Service[]
+}
+
+model Service {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  type        ServiceType
+  enabled     Boolean     @default(true)
+  groupId     String?
+  group       ServiceGroup? @relation(fields: [groupId], references: [id])
+
+  // URL / host
+  url         String      // URL completa o IP:puerto
+  host        String?     // Solo el hostname/IP (para ping, DNS)
+
+  // HTTP config
+  method      String      @default("GET")
+  headers     Json?       // { "Authorization": "Bearer ..." }
+  body        String?     // Request body (JSON string o XML)
+  followRedirects Boolean @default(true)
+  
+  // Validación de respuesta
+  expectedHttpCode  Int?    @default(200)     // Código HTTP esperado
+  expectedKeyword   String?                   // Keyword esperada en body
+  unexpectedKeyword String?                   // Si aparece esto → DEGRADED
+
+  // Login check específico
+  loginSuccessField   String?  // Campo JSON que indica éxito ej: "token"
+  loginSuccessValue   String?  // Valor esperado en ese campo (opcional)
+  loginFailureKeyword String?  // Keyword que indica fallo en body ej: "invalid"
+
+  // SOAP específico
+  soapAction    String?   // SOAPAction header
+  soapEnvelope  String?   // XML envelope completo para SOAP_OPERACION
+
+  // Timeouts e intervalos
+  timeout       Int       @default(10000)  // ms
+  interval      Int       @default(60)     // segundos entre checks
+
+  // Umbrales de alerta
+  slaTarget         Float?  // % uptime objetivo ej: 99.9
+  slowThresholdMs   Int?    @default(3000) // ms — alerta si supera esto
+  failureThreshold  Int     @default(3)    // checks fallidos consecutivos antes de alertar
+
+  // SSL
+  sslAlertDaysBefore Int?   @default(30)   // alertar N días antes
+
+  // Notificaciones
+  notifyTelegram  Boolean @default(true)
+  notifyEmail     Boolean @default(true)
+  notifyEmailTo   String? // destinatarios adicionales, separados por coma
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  checks  Check[]
+  alerts  Alert[]
+  
+  @@index([enabled])
+  @@index([groupId])
+}
+
+model Check {
+  id          String      @id @default(cuid())
+  serviceId   String
+  service     Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  timestamp   DateTime    @default(now())
+  status      CheckStatus
+  
+  // HTTP metrics
+  httpCode    Int?
+  responseTime Int?        // ms
+  responseSize Int?        // bytes
+
+  // Ping metrics
+  pingMin     Float?      // ms
+  pingAvg     Float?      // ms
+  pingMax     Float?      // ms
+  pingLoss    Float?      // % packet loss
+
+  // SSL metrics
+  sslDaysLeft  Int?
+  sslExpiry    DateTime?
+
+  // DNS
+  dnsResolved  Boolean?
+  dnsIp        String?
+
+  // Detalle del resultado
+  bodySnippet String?     // primeros 500 chars del body
+  error       String?     // mensaje de error si falló
+
+  @@index([serviceId, timestamp])
+  @@index([timestamp])
+}
+
+model Alert {
+  id          String    @id @default(cuid())
+  serviceId   String
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  type        AlertType
+  startedAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+  acknowledged Boolean  @default(false)
+
+  // Snapshot del primer check fallido
+  triggerHttpCode   Int?
+  triggerStatus     CheckStatus?
+  triggerError      String?
+  
+  // Notificaciones enviadas
+  notifiedTelegram  Boolean   @default(false)
+  notifiedEmail     Boolean   @default(false)
+  telegramMessageId String?   // para poder editar el mensaje
+
+  @@index([serviceId, resolvedAt])
+  @@index([resolvedAt])
+}
+
+model NotificationLog {
+  id          String   @id @default(cuid())
+  channel     String   // "telegram" | "email"
+  recipient   String
+  subject     String?
+  body        String
+  sentAt      DateTime @default(now())
+  success     Boolean
+  error       String?
+}
