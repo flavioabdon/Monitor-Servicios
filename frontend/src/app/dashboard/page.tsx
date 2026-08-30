@@ -34,10 +34,12 @@ import {
   Check,
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  BarChart2
 } from 'lucide-react';
 import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI, ConfigAPI } from '@/lib/api';
 import SegipLogo from '@/components/SegipLogo';
+import ServiceMetricsModal from '@/components/ServiceMetricsModal';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -53,6 +55,7 @@ export default function DashboardPage() {
   // Service Modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingService, setEditingService] = useState<any>(null);
+  const [metricsService, setMetricsService] = useState<any>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [aiLoading, setAiLoading] = useState<boolean>(false);
@@ -693,9 +696,14 @@ export default function DashboardPage() {
                         </td>
 
                         {/* Name & URL */}
-                        <td className="px-5 py-4">
-                          <div className="font-bold text-slate-900 tracking-tight flex items-center space-x-2">
+                        <td
+                          className="px-5 py-4 cursor-pointer group"
+                          onClick={() => setMetricsService(svc)}
+                          title="Haga clic para ver gráficos y métricas de este servicio"
+                        >
+                          <div className="font-bold text-slate-900 group-hover:text-[#790026] transition-colors tracking-tight flex items-center space-x-2">
                             <span>{svc.name}</span>
+                            <BarChart2 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#790026]" />
                             {!svc.enabled && (
                               <span className="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">Deshabilitado</span>
                             )}
@@ -703,7 +711,13 @@ export default function DashboardPage() {
                           <div className="text-xs font-mono text-slate-500 truncate max-w-xs md:max-w-md mt-0.5 flex items-center space-x-1">
                             <span>{svc.host || svc.url}</span>
                             {svc.url.startsWith('http') && (
-                              <a href={svc.url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-slate-700">
+                              <a
+                                href={svc.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-slate-400 hover:text-slate-700"
+                              >
                                 <ExternalLink className="w-3 h-3 ml-1 inline" />
                               </a>
                             )}
@@ -724,9 +738,14 @@ export default function DashboardPage() {
                         </td>
 
                         {/* Response Time & Details */}
-                        <td className="px-5 py-4 whitespace-nowrap text-xs">
-                          <div className="text-slate-900 font-bold font-mono">
-                            {lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'} ms
+                        <td
+                          className="px-5 py-4 whitespace-nowrap text-xs cursor-pointer group"
+                          onClick={() => setMetricsService(svc)}
+                          title="Ver historial de latencia"
+                        >
+                          <div className="text-slate-900 font-bold font-mono group-hover:text-[#790026] flex items-center space-x-1">
+                            <span>{lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'} ms</span>
+                            <BarChart2 className="w-3 h-3 text-[#790026] opacity-60 group-hover:opacity-100" />
                           </div>
                           {lastCheck?.httpCode && (
                             <div className="text-[11px] text-slate-500">HTTP {lastCheck.httpCode}</div>
@@ -743,6 +762,15 @@ export default function DashboardPage() {
 
                         {/* Actions */}
                         <td className="px-5 py-4 whitespace-nowrap text-right space-x-1.5">
+                          {/* Metrics / Chart button */}
+                          <button
+                            onClick={() => setMetricsService(svc)}
+                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-[#790026] border border-rose-200 transition-colors"
+                            title="Ver métricas y gráficos estilo Google Cloud"
+                          >
+                            <BarChart2 className="w-4 h-4" />
+                          </button>
+
                           {/* AI Analysis button if degraded or down */}
                           {(isDegraded || isDown) && (
                             <button
@@ -1430,6 +1458,18 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* MODAL: SERVICE METRICS & ANALYTICS (GOOGLE CLOUD STYLE) */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {metricsService && (
+        <ServiceMetricsModal
+          service={metricsService}
+          isOpen={!!metricsService}
+          onClose={() => setMetricsService(null)}
+          onTriggerProbe={handleTriggerProbe}
+        />
       )}
     </div>
   );

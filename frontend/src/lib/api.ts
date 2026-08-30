@@ -39,8 +39,16 @@ export const ServiceAPI = {
   delete: (id: string) => api.delete(`/services/${id}`),
   toggle: (id: string) => api.patch(`/services/${id}/toggle`).then((res) => res.data),
   triggerProbe: (id: string) => api.post(`/services/${id}/probe`).then((res) => res.data),
-  getHistory: (id: string, period: string = '24h') =>
-    api.get(`/checks/service/${id}/history?period=${period}`).then((res) => res.data),
+  getHistory: (id: string, params?: { period?: string; from?: string; to?: string } | string) => {
+    if (typeof params === 'string') {
+      return api.get(`/checks/service/${id}/history?period=${params}`).then((res) => res.data);
+    }
+    const query = new URLSearchParams();
+    if (params?.period) query.set('period', params.period);
+    if (params?.from) query.set('from', params.from);
+    if (params?.to) query.set('to', params.to);
+    return api.get(`/checks/service/${id}/history?${query.toString()}`).then((res) => res.data);
+  },
 };
 
 export const StatsAPI = {
