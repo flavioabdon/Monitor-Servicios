@@ -26,10 +26,11 @@ import {
   XCircle,
   Clock,
   Sparkles,
-  ChevronRight,
   ExternalLink,
   Shield,
-  FileText
+  Layers,
+  BarChart3,
+  Cpu
 } from 'lucide-react';
 import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI } from '@/lib/api';
 
@@ -145,7 +146,7 @@ export default function DashboardPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('¿Está seguro de eliminar este servicio?')) {
+    if (confirm('¿Está seguro de eliminar este servicio del monitor?')) {
       try {
         await ServiceAPI.delete(id);
         fetchData();
@@ -277,7 +278,7 @@ export default function DashboardPage() {
       });
       setAiAnalysis(res.analysis);
     } catch (err: any) {
-      setAiAnalysis('No se pudo contactar a Ollama local. Asegúrese de que Ollama esté ejecutándose (`ollama run llama3`).');
+      setAiAnalysis('No se pudo contactar a Ollama local. Asegúrese de que el servicio de IA esté activo en el servidor.');
     } finally {
       setAiLoading(false);
     }
@@ -302,43 +303,50 @@ export default function DashboardPage() {
   const getServiceTypeBadge = (type: string) => {
     switch (type) {
       case 'WEB_INSTITUCIONAL':
-        return <span className="bg-blue-950/80 text-blue-300 border border-blue-800 px-2 py-0.5 rounded text-xs">Web Institucional</span>;
+        return <span className="bg-[#141A21] text-blue-300 border border-blue-900/60 px-2.5 py-0.5 rounded-lg text-xs font-medium">Web Institucional</span>;
       case 'SISTEMA_WEB':
-        return <span className="bg-cyan-950/80 text-cyan-300 border border-cyan-800 px-2 py-0.5 rounded text-xs">Sistema Web</span>;
+        return <span className="bg-[#141A21] text-cyan-300 border border-cyan-900/60 px-2.5 py-0.5 rounded-lg text-xs font-medium">Sistema Web</span>;
       case 'API_JSON':
-        return <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded text-xs">API REST / JSON</span>;
+        return <span className="bg-[#141A21] text-[#38B79D] border border-[#38B79D]/30 px-2.5 py-0.5 rounded-lg text-xs font-medium">API REST / JSON</span>;
       case 'SOAP_WSDL':
-        return <span className="bg-amber-950/80 text-amber-300 border border-amber-800 px-2 py-0.5 rounded text-xs">SOAP WSDL</span>;
+        return <span className="bg-[#141A21] text-amber-300 border border-amber-900/60 px-2.5 py-0.5 rounded-lg text-xs font-medium">SOAP WSDL</span>;
       case 'SOAP_OPERACION':
-        return <span className="bg-orange-950/80 text-orange-300 border border-orange-800 px-2 py-0.5 rounded text-xs">SOAP Operación</span>;
+        return <span className="bg-[#141A21] text-orange-300 border border-orange-900/60 px-2.5 py-0.5 rounded-lg text-xs font-medium">SOAP Operación</span>;
       case 'LOGIN_CHECK':
-        return <span className="bg-purple-950/80 text-purple-300 border border-purple-800 px-2 py-0.5 rounded text-xs">Login Check</span>;
+        return <span className="bg-[#141A21] text-[#B73852] border border-[#B73852]/30 px-2.5 py-0.5 rounded-lg text-xs font-medium">Login Check</span>;
       case 'PING':
-        return <span className="bg-teal-950/80 text-teal-300 border border-teal-800 px-2 py-0.5 rounded text-xs">Ping / ICMP</span>;
+        return <span className="bg-[#141A21] text-teal-300 border border-teal-900/60 px-2.5 py-0.5 rounded-lg text-xs font-medium">Ping / ICMP</span>;
       case 'SSL_CERT':
-        return <span className="bg-indigo-950/80 text-indigo-300 border border-indigo-800 px-2 py-0.5 rounded text-xs">Certificado SSL</span>;
+        return <span className="bg-[#141A21] text-indigo-300 border border-indigo-900/60 px-2.5 py-0.5 rounded-lg text-xs font-medium">Certificado SSL</span>;
       default:
-        return <span className="bg-gray-800 text-gray-300 px-2 py-0.5 rounded text-xs">{type}</span>;
+        return <span className="bg-[#141A21] text-gray-300 px-2.5 py-0.5 rounded-lg text-xs font-medium">{type}</span>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1d] text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-[#141A21] text-[#FAFAFA] flex flex-col font-sans relative">
+      {/* Top Floating Backdrop Card (matching LayoutUser in plataforma-tramites) */}
+      <div className="w-full flex justify-center pt-5 px-4 absolute top-0 left-0 right-0 pointer-events-none z-0">
+        <div className="w-[96vw] max-w-7xl h-36 rounded-3xl bg-[#1C252E]/90 border border-white/5 opacity-50 blur-[1px]" />
+      </div>
+
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* TOP NAVIGATION BAR */}
+      {/* INSTITUTIONAL NAVBAR */}
       {/* ───────────────────────────────────────────────────────────── */}
-      <header className="border-b border-gray-800 bg-[#111827]/90 backdrop-blur sticky top-0 z-30 px-4 md:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="font-mono font-bold text-lg text-white tracking-wide">
-                SEGIP <span className="text-indigo-400 font-normal">MONITOR</span>
+      <header className="sticky top-0 z-30 bg-[#1C252E]/90 backdrop-blur-md border-b border-white/10 px-4 md:px-8 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[#790026] flex items-center justify-center shadow-md shadow-[#790026]/30">
+            <ShieldCheck className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs uppercase tracking-widest text-[#B73852] font-semibold">
+                Estado Plurinacional de Bolivia
               </span>
-              <p className="text-[11px] text-gray-400 font-sans leading-none">Panel de Administración</p>
             </div>
+            <h1 className="text-base font-bold text-white tracking-tight leading-tight">
+              SEGIP &bull; Monitor de Servicios
+            </h1>
           </div>
         </div>
 
@@ -346,21 +354,24 @@ export default function DashboardPage() {
           {/* Quick TV Link */}
           <button
             onClick={() => router.push('/tv')}
-            className="flex items-center space-x-1.5 bg-gray-800/80 hover:bg-gray-700 border border-gray-700 text-gray-200 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+            className="flex items-center space-x-1.5 bg-[#141A21] hover:bg-[#28323D] border border-white/10 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
           >
-            <Monitor className="w-4 h-4 text-indigo-400" />
-            <span className="hidden sm:inline">Modo TV / NOC</span>
+            <Monitor className="w-3.5 h-3.5 text-[#38B79D]" />
+            <span className="hidden sm:inline">Modo Sala NOC</span>
           </button>
 
-          {/* User info & logout */}
-          <div className="flex items-center space-x-3 pl-3 border-l border-gray-800">
+          {/* User Profile Badge */}
+          <div className="flex items-center space-x-3 pl-3 border-l border-white/10">
+            <div className="w-8 h-8 rounded-full bg-[#790026] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+              {user[0]?.toUpperCase() || 'A'}
+            </div>
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-semibold text-white">{user}</p>
-              <p className="text-[10px] text-emerald-400">Admin Activo</p>
+              <p className="text-xs font-semibold text-white leading-none">{user}</p>
+              <p className="text-[10px] text-[#38B79D] font-medium mt-0.5">Administrador</p>
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 rounded-xl bg-gray-800/60 hover:bg-red-950/60 hover:text-red-400 text-gray-400 transition-colors"
+              className="p-2 rounded-xl bg-[#141A21] hover:bg-[#BA1B1B]/20 hover:text-red-400 text-[#9FA6AD] border border-white/5 transition-colors"
               title="Cerrar Sesión"
             >
               <LogOut className="w-4 h-4" />
@@ -372,33 +383,37 @@ export default function DashboardPage() {
       {/* ───────────────────────────────────────────────────────────── */}
       {/* MAIN CONTENT BODY */}
       {/* ───────────────────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6 z-10">
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
-            <span className="text-xs text-gray-400 font-medium">Servicios Monitoreados</span>
+          <div className="bg-[#1C252E] border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#790026]" />
+            <span className="text-xs text-[#9FA6AD] font-medium">Servicios Monitoreados</span>
             <div className="text-2xl font-bold text-white mt-2">{services.length}</div>
           </div>
 
-          <div className="bg-emerald-950/20 border border-emerald-800/40 rounded-2xl p-4 flex flex-col justify-between">
-            <span className="text-xs text-emerald-400 font-medium flex items-center">
+          <div className="bg-[#1C252E] border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#38B79D]" />
+            <span className="text-xs text-[#38B79D] font-medium flex items-center">
               <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Operativos
             </span>
-            <div className="text-2xl font-bold text-emerald-400 mt-2">
+            <div className="text-2xl font-bold text-[#38B79D] mt-2">
               {services.filter((s) => s.checks?.[0]?.status === 'UP').length}
             </div>
           </div>
 
-          <div className="bg-amber-950/20 border border-amber-800/40 rounded-2xl p-4 flex flex-col justify-between">
+          <div className="bg-[#1C252E] border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#f59e0b]" />
             <span className="text-xs text-amber-400 font-medium flex items-center">
-              <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Degradados (Auth/Latencia)
+              <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Degradados
             </span>
             <div className="text-2xl font-bold text-amber-400 mt-2">
               {services.filter((s) => s.checks?.[0]?.status === 'DEGRADED').length}
             </div>
           </div>
 
-          <div className="bg-red-950/20 border border-red-800/40 rounded-2xl p-4 flex flex-col justify-between">
+          <div className="bg-[#1C252E] border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#BA1B1B]" />
             <span className="text-xs text-red-400 font-medium flex items-center">
               <XCircle className="w-3.5 h-3.5 mr-1" /> Caídos
             </span>
@@ -407,29 +422,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
-            <span className="text-xs text-gray-400 font-medium">Uptime Global 24h</span>
-            <div className="text-2xl font-bold text-indigo-400 mt-2">{stats?.globalUptime || '100.00'}%</div>
+          <div className="bg-[#1C252E] border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#B73852]" />
+            <span className="text-xs text-[#9FA6AD] font-medium">Uptime Global 24h</span>
+            <div className="text-2xl font-bold text-[#B73852] mt-2">{stats?.globalUptime || '100.00'}%</div>
           </div>
 
-          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
-            <span className="text-xs text-gray-400 font-medium">Latencia Promedio</span>
+          <div className="bg-[#1C252E] border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-500" />
+            <span className="text-xs text-[#9FA6AD] font-medium">Latencia Promedio</span>
             <div className="text-2xl font-bold text-yellow-400 mt-2">{stats?.avgResponseTime || 0} ms</div>
           </div>
         </div>
 
         {/* Action Controls & Filters */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-[#111827]/80 p-4 rounded-2xl border border-gray-800">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-[#1C252E] p-4 rounded-2xl border border-white/10 shadow-sm">
           <div className="flex flex-1 flex-col sm:flex-row gap-3">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9FA6AD]" />
               <input
                 type="text"
-                placeholder="Buscar servicio por nombre o URL/IP..."
+                placeholder="Buscar servicio por nombre, URL o IP..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 bg-[#141A21] border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852] transition-all"
               />
             </div>
 
@@ -437,7 +454,7 @@ export default function DashboardPage() {
             <select
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              className="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="bg-[#141A21] border border-white/10 rounded-xl px-3 py-2 text-sm text-[#FAFAFA] focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852] transition-all"
             >
               <option value="ALL">Todos los Grupos</option>
               {groups.map((g) => (
@@ -451,7 +468,7 @@ export default function DashboardPage() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="bg-[#141A21] border border-white/10 rounded-xl px-3 py-2 text-sm text-[#FAFAFA] focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852] transition-all"
             >
               <option value="ALL">Todos los Estados</option>
               <option value="UP">🟢 Operativos (UP)</option>
@@ -463,7 +480,7 @@ export default function DashboardPage() {
           <div className="flex items-center space-x-3">
             <button
               onClick={fetchData}
-              className="p-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
+              className="p-2.5 rounded-xl bg-[#141A21] hover:bg-[#28323D] text-[#FAFAFA] border border-white/10 transition-colors shadow-sm"
               title="Actualizar datos"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -471,7 +488,7 @@ export default function DashboardPage() {
 
             <button
               onClick={handleOpenAddModal}
-              className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all"
+              className="flex items-center space-x-2 bg-[#790026] hover:bg-[#9c1b3e] text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-[#790026]/30 transition-all active:scale-[0.99]"
             >
               <Plus className="w-4 h-4" />
               <span>Añadir Servicio</span>
@@ -482,23 +499,23 @@ export default function DashboardPage() {
         {/* ───────────────────────────────────────────────────────────── */}
         {/* SERVICES TABLE / LIST */}
         {/* ───────────────────────────────────────────────────────────── */}
-        <div className="bg-[#111827]/90 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-[#1C252E] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-300">
-              <thead className="bg-gray-900/90 text-xs uppercase font-mono text-gray-400 border-b border-gray-800">
+            <table className="w-full text-left text-sm text-[#FAFAFA]">
+              <thead className="bg-[#141A21] text-xs font-semibold text-[#9FA6AD] border-b border-white/10">
                 <tr>
                   <th className="px-5 py-3.5">Estado</th>
                   <th className="px-5 py-3.5">Servicio & URL / Host</th>
                   <th className="px-5 py-3.5">Tipo & Grupo</th>
                   <th className="px-5 py-3.5">Tiempo Resp.</th>
-                  <th className="px-5 py-3.5">Último Check</th>
+                  <th className="px-5 py-3.5">Último Chequeo</th>
                   <th className="px-5 py-3.5 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/60">
+              <tbody className="divide-y divide-white/5">
                 {filteredServices.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-5 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-5 py-12 text-center text-[#9FA6AD]">
                       No se encontraron servicios configurados o no coinciden con el filtro.
                     </td>
                   </tr>
@@ -514,32 +531,32 @@ export default function DashboardPage() {
                     return (
                       <tr
                         key={svc.id}
-                        className={`hover:bg-gray-800/40 transition-colors ${
+                        className={`hover:bg-[#28323D]/50 transition-colors ${
                           !svc.enabled ? 'opacity-50' : ''
                         }`}
                       >
                         {/* Status Badge */}
                         <td className="px-5 py-4 whitespace-nowrap">
                           {isUp && (
-                            <span className="inline-flex items-center space-x-1.5 bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 px-2.5 py-1 rounded-full text-xs font-mono font-bold">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 live-indicator-up" />
+                            <span className="inline-flex items-center space-x-1.5 bg-[#38B79D]/15 text-[#38B79D] border border-[#38B79D]/30 px-2.5 py-1 rounded-full text-xs font-bold">
+                              <span className="w-2 h-2 rounded-full bg-[#38B79D] live-indicator-up" />
                               <span>UP</span>
                             </span>
                           )}
                           {isDegraded && (
-                            <span className="inline-flex items-center space-x-1.5 bg-amber-950/80 text-amber-300 border border-amber-700 px-2.5 py-1 rounded-full text-xs font-mono font-bold">
+                            <span className="inline-flex items-center space-x-1.5 bg-amber-950/40 text-amber-300 border border-amber-600/40 px-2.5 py-1 rounded-full text-xs font-bold">
                               <span className="w-2 h-2 rounded-full bg-amber-400" />
                               <span>DEGRADED</span>
                             </span>
                           )}
                           {isDown && (
-                            <span className="inline-flex items-center space-x-1.5 bg-red-950/80 text-red-400 border border-red-700 px-2.5 py-1 rounded-full text-xs font-mono font-bold">
-                              <span className="w-2 h-2 rounded-full bg-red-500 live-indicator-down" />
+                            <span className="inline-flex items-center space-x-1.5 bg-[#BA1B1B]/20 text-red-300 border border-[#BA1B1B]/40 px-2.5 py-1 rounded-full text-xs font-bold">
+                              <span className="w-2 h-2 rounded-full bg-[#BA1B1B] live-indicator-down" />
                               <span>DOWN</span>
                             </span>
                           )}
                           {status === 'UNKNOWN' && (
-                            <span className="inline-flex items-center space-x-1.5 bg-gray-800 text-gray-400 px-2.5 py-1 rounded-full text-xs font-mono">
+                            <span className="inline-flex items-center space-x-1.5 bg-[#141A21] text-[#9FA6AD] px-2.5 py-1 rounded-full text-xs font-semibold border border-white/5">
                               <span>PENDIENTE</span>
                             </span>
                           )}
@@ -550,13 +567,13 @@ export default function DashboardPage() {
                           <div className="font-semibold text-white tracking-tight flex items-center space-x-2">
                             <span>{svc.name}</span>
                             {!svc.enabled && (
-                              <span className="text-[10px] text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">Deshabilitado</span>
+                              <span className="text-[10px] text-[#9FA6AD] bg-[#141A21] border border-white/5 px-1.5 py-0.5 rounded">Deshabilitado</span>
                             )}
                           </div>
-                          <div className="text-xs font-mono text-gray-400 truncate max-w-xs md:max-w-md mt-0.5 flex items-center space-x-1">
+                          <div className="text-xs font-mono text-[#9FA6AD] truncate max-w-xs md:max-w-md mt-0.5 flex items-center space-x-1">
                             <span>{svc.host || svc.url}</span>
                             {svc.url.startsWith('http') && (
-                              <a href={svc.url} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-gray-300">
+                              <a href={svc.url} target="_blank" rel="noreferrer" className="text-[#9FA6AD] hover:text-white">
                                 <ExternalLink className="w-3 h-3 ml-1 inline" />
                               </a>
                             )}
@@ -568,8 +585,8 @@ export default function DashboardPage() {
                           <div className="space-y-1">
                             <div>{getServiceTypeBadge(svc.type)}</div>
                             {svc.group && (
-                              <div className="text-xs text-gray-400 flex items-center space-x-1">
-                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: svc.group.color }} />
+                              <div className="text-xs text-[#9FA6AD] flex items-center space-x-1.5">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: svc.group.color }} />
                                 <span>{svc.group.name}</span>
                               </div>
                             )}
@@ -577,20 +594,20 @@ export default function DashboardPage() {
                         </td>
 
                         {/* Response Time & Details */}
-                        <td className="px-5 py-4 whitespace-nowrap font-mono text-xs">
-                          <div className="text-white font-bold">
+                        <td className="px-5 py-4 whitespace-nowrap text-xs">
+                          <div className="text-white font-bold font-mono">
                             {lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'} ms
                           </div>
                           {lastCheck?.httpCode && (
-                            <div className="text-[11px] text-gray-400">HTTP {lastCheck.httpCode}</div>
+                            <div className="text-[11px] text-[#9FA6AD]">HTTP {lastCheck.httpCode}</div>
                           )}
                           {lastCheck?.sslDaysLeft !== undefined && lastCheck?.sslDaysLeft !== null && (
-                            <div className="text-[11px] text-indigo-300">SSL: {lastCheck.sslDaysLeft} días</div>
+                            <div className="text-[11px] text-[#B73852]">SSL: {lastCheck.sslDaysLeft} días</div>
                           )}
                         </td>
 
                         {/* Last check time */}
-                        <td className="px-5 py-4 whitespace-nowrap text-xs text-gray-400">
+                        <td className="px-5 py-4 whitespace-nowrap text-xs text-[#9FA6AD]">
                           {lastCheck ? new Date(lastCheck.timestamp).toLocaleTimeString('es-BO') : 'Nunca'}
                         </td>
 
@@ -600,10 +617,10 @@ export default function DashboardPage() {
                           {(isDegraded || isDown) && (
                             <button
                               onClick={() => handleAnalyzeWithAi(svc)}
-                              className="p-1.5 rounded-lg bg-indigo-950/80 text-indigo-300 hover:bg-indigo-900 border border-indigo-700 transition-colors"
+                              className="p-1.5 rounded-lg bg-[#790026]/20 text-[#B73852] hover:bg-[#790026]/40 border border-[#790026]/50 transition-colors"
                               title="Diagnosticar fallo con Ollama IA"
                             >
-                              <Bot className="w-4 h-4 inline mr-1 text-indigo-400" />
+                              <Bot className="w-4 h-4 inline mr-1 text-[#B73852]" />
                               <span className="text-xs font-semibold">Diagnosticar</span>
                             </button>
                           )}
@@ -612,7 +629,7 @@ export default function DashboardPage() {
                           <button
                             onClick={() => handleTriggerProbe(svc.id)}
                             disabled={isProbing}
-                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-emerald-400 transition-colors disabled:opacity-50"
+                            className="p-1.5 rounded-lg bg-[#141A21] hover:bg-[#28323D] text-[#38B79D] border border-white/10 transition-colors disabled:opacity-50"
                             title="Probar ahora"
                           >
                             <Play className={`w-4 h-4 ${isProbing ? 'animate-spin' : ''}`} />
@@ -621,8 +638,8 @@ export default function DashboardPage() {
                           {/* Toggle active */}
                           <button
                             onClick={() => handleToggle(svc.id)}
-                            className={`p-1.5 rounded-lg transition-colors ${
-                              svc.enabled ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-red-950 text-red-400'
+                            className={`p-1.5 rounded-lg border transition-colors ${
+                              svc.enabled ? 'bg-[#141A21] text-[#FAFAFA] hover:bg-[#28323D] border-white/10' : 'bg-[#BA1B1B]/20 text-red-400 border-[#BA1B1B]/30'
                             }`}
                             title={svc.enabled ? 'Pausar monitoreo' : 'Reanudar monitoreo'}
                           >
@@ -632,7 +649,7 @@ export default function DashboardPage() {
                           {/* Edit */}
                           <button
                             onClick={() => handleOpenEditModal(svc)}
-                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-blue-400 transition-colors"
+                            className="p-1.5 rounded-lg bg-[#141A21] hover:bg-[#28323D] text-blue-400 border border-white/10 transition-colors"
                             title="Editar servicio"
                           >
                             <Edit className="w-4 h-4" />
@@ -641,7 +658,7 @@ export default function DashboardPage() {
                           {/* Delete */}
                           <button
                             onClick={() => handleDelete(svc.id)}
-                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-red-950 text-red-400 transition-colors"
+                            className="p-1.5 rounded-lg bg-[#141A21] hover:bg-[#BA1B1B]/20 text-red-400 border border-white/10 transition-colors"
                             title="Eliminar servicio"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -662,15 +679,17 @@ export default function DashboardPage() {
       {/* ───────────────────────────────────────────────────────────── */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#111827] border border-gray-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+          <div className="bg-[#1C252E] border border-white/10 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8 max-h-[90vh] overflow-y-auto relative">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#38B79D]" />
+
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 pt-1">
               <h2 className="text-lg font-bold text-white flex items-center space-x-2">
-                <Server className="w-5 h-5 text-indigo-400" />
-                <span>{editingService ? 'Editar Servicio' : 'Añadir Nuevo Servicio'}</span>
+                <Server className="w-5 h-5 text-[#B73852]" />
+                <span>{editingService ? 'Editar Servicio de Monitoreo' : 'Añadir Nuevo Servicio de Monitoreo'}</span>
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white text-sm"
+                className="text-[#9FA6AD] hover:text-white text-sm"
               >
                 ✕
               </button>
@@ -679,23 +698,23 @@ export default function DashboardPage() {
             <form onSubmit={handleSaveService} className="space-y-4 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Nombre del Servicio *</label>
+                  <label className="block text-xs font-semibold text-[#FAFAFA] mb-1">Nombre del Servicio *</label>
                   <input
                     type="text"
                     required
                     placeholder="ej: Portal Ciudadano SEGIP"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-[#141A21] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Tipo de Monitoreo *</label>
+                  <label className="block text-xs font-semibold text-[#FAFAFA] mb-1">Tipo de Monitoreo *</label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-[#141A21] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852]"
                   >
                     <option value="WEB_INSTITUCIONAL">🌐 Web Institucional (HTTP 2xx)</option>
                     <option value="SISTEMA_WEB">💻 Sistema Web (Validación de Keyword)</option>
@@ -711,7 +730,7 @@ export default function DashboardPage() {
 
               {/* URL or Host */}
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-[#FAFAFA] mb-1">
                   {formData.type === 'PING' ? 'Dirección IP o Hostname *' : 'URL del Servicio *'}
                 </label>
                 <input
@@ -726,18 +745,18 @@ export default function DashboardPage() {
                   }
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value, host: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"
+                  className="w-full px-3 py-2 bg-[#141A21] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852] font-mono text-xs"
                 />
               </div>
 
               {/* Group selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Grupo / Categoría</label>
+                  <label className="block text-xs font-semibold text-[#FAFAFA] mb-1">Grupo / Categoría</label>
                   <select
                     value={formData.groupId}
                     onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-[#141A21] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852]"
                   >
                     <option value="">Sin grupo</option>
                     {groups.map((g) => (
@@ -749,57 +768,57 @@ export default function DashboardPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Intervalo de Chequeo (seg)</label>
+                  <label className="block text-xs font-semibold text-[#FAFAFA] mb-1">Intervalo de Chequeo (seg)</label>
                   <input
                     type="number"
                     min={10}
                     max={86400}
                     value={formData.interval}
                     onChange={(e) => setFormData({ ...formData, interval: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-[#141A21] border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#B73852] focus:ring-1 focus:ring-[#B73852]"
                   />
                 </div>
               </div>
 
               {/* SPECIFIC CONFIG FOR LOGIN CHECK */}
               {formData.type === 'LOGIN_CHECK' && (
-                <div className="p-4 rounded-xl bg-purple-950/30 border border-purple-800/60 space-y-3">
-                  <h3 className="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                <div className="p-4 rounded-2xl bg-[#141A21] border border-[#B73852]/30 space-y-3">
+                  <h3 className="text-xs font-bold text-[#B73852] uppercase tracking-wider">
                     Configuración de Validación Lógica de Login
                   </h3>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-[#9FA6AD]">
                     Permite detectar cuando el endpoint retorna HTTP 200 pero el body contiene mensajes de error (ej: credenciales inválidas).
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-300 mb-1">Campo de Éxito en JSON</label>
+                      <label className="block text-xs text-[#FAFAFA] mb-1">Campo de Éxito en JSON</label>
                       <input
                         type="text"
                         placeholder="ej: token o accessToken"
                         value={formData.loginSuccessField}
                         onChange={(e) => setFormData({ ...formData, loginSuccessField: e.target.value })}
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white text-xs"
+                        className="w-full px-3 py-2 bg-[#1C252E] border border-white/10 rounded-xl text-white text-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-300 mb-1">Palabra Clave de Fallo en Body</label>
+                      <label className="block text-xs text-[#FAFAFA] mb-1">Palabra Clave de Fallo en Body</label>
                       <input
                         type="text"
                         placeholder="ej: invalid_credentials o error"
                         value={formData.loginFailureKeyword}
                         onChange={(e) => setFormData({ ...formData, loginFailureKeyword: e.target.value })}
-                        className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white text-xs"
+                        className="w-full px-3 py-2 bg-[#1C252E] border border-white/10 rounded-xl text-white text-xs"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">JSON Payload de Prueba (POST Body)</label>
+                    <label className="block text-xs text-[#FAFAFA] mb-1">JSON Payload de Prueba (POST Body)</label>
                     <textarea
                       rows={2}
                       placeholder='{"username": "test_monitor", "password": "password_test"}'
                       value={formData.body}
                       onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white font-mono text-xs"
+                      className="w-full px-3 py-2 bg-[#1C252E] border border-white/10 rounded-xl text-white font-mono text-xs"
                     />
                   </div>
                 </div>
@@ -807,28 +826,28 @@ export default function DashboardPage() {
 
               {/* SPECIFIC CONFIG FOR SOAP */}
               {formData.type === 'SOAP_OPERACION' && (
-                <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-800/60 space-y-3">
+                <div className="p-4 rounded-2xl bg-[#141A21] border border-amber-700/40 space-y-3">
                   <h3 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
                     Configuración SOAP Envelope
                   </h3>
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">SOAPAction Header (Opcional)</label>
+                    <label className="block text-xs text-[#FAFAFA] mb-1">SOAPAction Header (Opcional)</label>
                     <input
                       type="text"
                       placeholder='ej: "http://tempuri.org/ConsultarDatos"'
                       value={formData.soapAction}
                       onChange={(e) => setFormData({ ...formData, soapAction: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white text-xs font-mono"
+                      className="w-full px-3 py-2 bg-[#1C252E] border border-white/10 rounded-xl text-white text-xs font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">XML Request Envelope</label>
+                    <label className="block text-xs text-[#FAFAFA] mb-1">XML Request Envelope</label>
                     <textarea
                       rows={3}
                       placeholder="<soapenv:Envelope xmlns:...>...</soapenv:Envelope>"
                       value={formData.soapEnvelope}
                       onChange={(e) => setFormData({ ...formData, soapEnvelope: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white font-mono text-xs"
+                      className="w-full px-3 py-2 bg-[#1C252E] border border-white/10 rounded-xl text-white font-mono text-xs"
                     />
                   </div>
                 </div>
@@ -838,63 +857,63 @@ export default function DashboardPage() {
               {(formData.type === 'WEB_INSTITUCIONAL' || formData.type === 'SISTEMA_WEB' || formData.type === 'API_JSON') && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">Palabra Clave Esperada (Éxito)</label>
+                    <label className="block text-xs font-semibold text-[#FAFAFA] mb-1">Palabra Clave Esperada (Éxito)</label>
                     <input
                       type="text"
                       placeholder="ej: SEGIP o Bienvenido"
                       value={formData.expectedKeyword}
                       onChange={(e) => setFormData({ ...formData, expectedKeyword: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white text-xs"
+                      className="w-full px-3 py-2 bg-[#141A21] border border-white/10 rounded-xl text-white text-xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">Palabra Inesperada (Marca Degradado)</label>
+                    <label className="block text-xs font-semibold text-[#FAFAFA] mb-1">Palabra Inesperada (Marca Degradado)</label>
                     <input
                       type="text"
                       placeholder="ej: Database error o 500"
                       value={formData.unexpectedKeyword}
                       onChange={(e) => setFormData({ ...formData, unexpectedKeyword: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-white text-xs"
+                      className="w-full px-3 py-2 bg-[#141A21] border border-white/10 rounded-xl text-white text-xs"
                     />
                   </div>
                 </div>
               )}
 
               {/* Notification Checkboxes */}
-              <div className="pt-2 border-t border-gray-800 flex flex-wrap items-center gap-6">
-                <label className="flex items-center space-x-2 text-xs text-gray-300 cursor-pointer">
+              <div className="pt-2 border-t border-white/10 flex flex-wrap items-center gap-6">
+                <label className="flex items-center space-x-2 text-xs text-[#FAFAFA] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.notifyTelegram}
                     onChange={(e) => setFormData({ ...formData, notifyTelegram: e.target.checked })}
-                    className="rounded bg-gray-900 border-gray-700 text-indigo-600 focus:ring-indigo-500"
+                    className="rounded bg-[#141A21] border-white/10 text-[#790026] focus:ring-[#790026]"
                   />
                   <span>Notificar por Telegram</span>
                 </label>
 
-                <label className="flex items-center space-x-2 text-xs text-gray-300 cursor-pointer">
+                <label className="flex items-center space-x-2 text-xs text-[#FAFAFA] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.notifyEmail}
                     onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.checked })}
-                    className="rounded bg-gray-900 border-gray-700 text-indigo-600 focus:ring-indigo-500"
+                    className="rounded bg-[#141A21] border-white/10 text-[#790026] focus:ring-[#790026]"
                   />
                   <span>Notificar por Correo</span>
                 </label>
               </div>
 
               {/* Modal Buttons */}
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-800">
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm font-medium transition-colors"
+                  className="px-4 py-2 bg-[#141A21] hover:bg-[#28323D] text-[#9FA6AD] hover:text-white rounded-xl text-sm font-semibold transition-colors border border-white/5"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all"
+                  className="px-5 py-2 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#790026]/30 transition-all active:scale-[0.99]"
                 >
                   {editingService ? 'Actualizar' : 'Guardar Servicio'}
                 </button>
@@ -909,32 +928,34 @@ export default function DashboardPage() {
       {/* ───────────────────────────────────────────────────────────── */}
       {isAiModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#111827] border border-indigo-500/50 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/40">
+          <div className="bg-[#1C252E] border border-[#B73852]/40 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#790026] to-[#B73852]" />
+
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 pt-1">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-[#790026]/20 text-[#B73852] border border-[#790026]/40">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-base">Diagnóstico de Incidente con Ollama IA</h3>
-                  <p className="text-xs text-gray-400">Modelo Local Privado</p>
+                  <h3 className="font-bold text-white text-base">Diagnóstico de Incidente con IA</h3>
+                  <p className="text-xs text-[#9FA6AD]">Asistente Ollama Local</p>
                 </div>
               </div>
-              <button onClick={() => setIsAiModalOpen(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setIsAiModalOpen(false)} className="text-[#9FA6AD] hover:text-white">
                 ✕
               </button>
             </div>
 
-            <div className="bg-gray-900/90 border border-gray-800 rounded-xl p-4 min-h-[160px] flex items-center justify-center">
+            <div className="bg-[#141A21] border border-white/10 rounded-2xl p-4 min-h-[160px] flex items-center justify-center">
               {aiLoading ? (
                 <div className="flex flex-col items-center space-y-3">
-                  <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs text-indigo-400 font-mono animate-pulse">
-                    Ollama analizando código de error y respuesta del servidor...
+                  <div className="w-8 h-8 border-3 border-[#B73852] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs text-[#B73852] font-medium animate-pulse">
+                    Analizando logs y respuesta técnica del servidor...
                   </p>
                 </div>
               ) : (
-                <div className="text-xs text-gray-200 whitespace-pre-wrap font-sans leading-relaxed">
+                <div className="text-xs text-[#FAFAFA] whitespace-pre-wrap font-sans leading-relaxed">
                   {aiAnalysis}
                 </div>
               )}
@@ -943,7 +964,7 @@ export default function DashboardPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setIsAiModalOpen(false)}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold"
+                className="px-4 py-2 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-xs font-semibold shadow-md shadow-[#790026]/20"
               >
                 Cerrar Diagnóstico
               </button>

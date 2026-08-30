@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="Layer_1"
+   data-name="Layer 1"
+   viewBox="0 0 426.92 133.92"
+   version="1.1"
+   sodipodi:docname="logo-ptc-h-light.svg"
+   inkscape:version="1.3.1 (9b9bdc1480, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview5"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="3.0614634"
+     inkscape:cx="213.46001"
+     inkscape:cy="66.961441"
+     inkscape:window-width="1870"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="Layer_1" />
+  <defs
+     id="defs1">
+    <style
+       id="style1">.cls-1{fill:#7a1128;}.cls-2{fill:#514c4b;}</style>
+  </defs>
+  <polygon
+     class="cls-1"
+     points="65.92 66.96 31.38 47.02 31.38 62.96 10 62.96 10 70.96 31.38 70.96 31.38 86.91 65.92 66.96"
+     id="polygon1" />
+  <path
+     class="cls-1"
+     d="M358.39,67,329.28,50.15V26.43A16.45,16.45,0,0,0,312.85,10H78.34A16.45,16.45,0,0,0,61.92,26.43V107.5a16.44,16.44,0,0,0,16.42,16.42H312.85a16.45,16.45,0,0,0,16.43-16.42V83.77ZM321.28,107.5a8.44,8.44,0,0,1-8.43,8.42H78.34a8.43,8.43,0,0,1-8.42-8.42V26.43A8.44,8.44,0,0,1,78.34,18H312.85a8.44,8.44,0,0,1,8.43,8.43Z"
+     id="path1" />
+  <path
+     class="cls-1"
+     d="M385.65,98.22A31.26,31.26,0,1,1,416.92,67,31.29,31.29,0,0,1,385.65,98.22Zm0-54.52A23.26,23.26,0,1,0,408.92,67,23.29,23.29,0,0,0,385.65,43.7Z"
+     id="path2" />
+  <circle
+     class="cls-2"
+     cx="385.65"
+     cy="66.96"
+     r="16.63"
+     id="circle2"
+     style="fill:#f8f9fa;fill-opacity:1" />
+  <path
+     class="cls-2"
+     d="M81.79,103.51V32h56.79A14.14,14.14,0,0,1,146,34a15.34,15.34,0,0,1,5.37,5.37,14,14,0,0,1,2,7.36v18.5a14,14,0,0,1-2,7.36A15.51,15.51,0,0,1,146,78a14.14,14.14,0,0,1-7.41,2L97.21,80v23.47Zm56-39.09v-17H97.21v17Z"
+     id="path3"
+     style="fill:#f8f9fa;fill-opacity:1" />
+  <path
+     class="cls-2"
+     d="M184.93,103.51V47.41H156.88V31.9h71.61V47.41h-28v56.1Z"
+     id="path4"
+     style="fill:#f8f9fa;fill-opacity:1" />
+  <path
+     class="cls-2"
+     d="M250.67,103.51a14.14,14.14,0,0,1-7.41-2,15.14,15.14,0,0,1-5.32-5.32,14.14,14.14,0,0,1-2-7.41V46.62a14.14,14.14,0,0,1,2-7.41,15.14,15.14,0,0,1,5.32-5.32,14.14,14.14,0,0,1,7.41-2h56.69V47.41H254.65a3.45,3.45,0,0,0-2.44.8,3.29,3.29,0,0,0-.84,2.49v34A2.94,2.94,0,0,0,254.65,88h52.71v15.52Z"
+     id="path5"
+     style="fill:#f8f9fa;fill-opacity:1" />
+</svg>
