@@ -5,74 +5,197 @@ import { prisma } from '../db/client';
 import { logger } from '../utils/logger';
 import { ProbeResult } from '../probes/httpProbe';
 
-// ── Telegram ─────────────────────────────────────────────────────────────────
+// ── Configuration State ───────────────────────────────────────────────────────
 
+export interface NotificationConfigData {
+  telegramEnabled: boolean;
+  telegramBotToken?: string;
+  telegramChatId?: string;
+
+  emailEnabled: boolean;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecure?: boolean;
+  smtpUser?: string;
+  smtpPass?: string;
+  smtpFrom?: string;
+  alertEmailTo?: string;
+}
+
+let cachedConfig: NotificationConfigData | null = null;
 let telegramBot: TelegramBot | null = null;
+let lastBotToken: string | null = null;
 
-function getBot(): TelegramBot | null {
-  if (!process.env.TELEGRAM_BOT_TOKEN) return null;
-  if (!telegramBot) {
-    telegramBot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
+export async function getNotificationConfig(): Promise<NotificationConfigData> {
+  try {
+    const config = await prisma.systemConfig.findUnique({
+      where: { id: 'default' },
+    });
+
+    if (config) {
+      cachedConfig = {
+        telegramEnabled: config.telegramEnabled,
+        telegramBotToken: config.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || '',
+        telegramChatId: config.telegramChatId || process.env.TELEGRAM_CHAT_ID || '',
+        emailEnabled: config.emailEnabled,
+        smtpHost: config.smtpHost || process.env.SMTP_HOST || '',
+        smtpPort: config.smtpPort || (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587),
+        smtpSecure: config.smtpSecure ?? (process.env.SMTP_SECURE === 'true'),
+        smtpUser: config.smtpUser || process.env.SMTP_USER || '',
+        smtpPass: config.smtpPass || process.env.SMTP_PASS || '',
+        smtpFrom: config.smtpFrom || process.env.SMTP_FROM || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
+        alertEmailTo: config.alertEmailTo || process.env.ALERT_EMAIL_TO || '',
+      };
+      return cachedConfig;
+    }
+  } catch (err) {
+    logger.warn('Failed to load system config from DB, falling back to process.env');
+  }
+
+  // Fallback to process.env
+  cachedConfig = {
+    telegramEnabled: !!process.env.TELEGRAM_BOT_TOKEN,
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
+    telegramChatId: process.env.TELEGRAM_CHAT_ID || '',
+    emailEnabled: !!process.env.SMTP_HOST,
+    smtpHost: process.env.SMTP_HOST || '',
+    smtpPort: parseInt(process.env.SMTP_PORT || '587', 10),
+    smtpSecure: process.env.SMTP_SECURE === 'true',
+    smtpUser: process.env.SMTP_USER || '',
+    smtpPass: process.env.SMTP_PASS || '',
+    smtpFrom: process.env.SMTP_FROM || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
+    alertEmailTo: process.env.ALERT_EMAIL_TO || '',
+  };
+  return cachedConfig;
+}
+
+export async function saveNotificationConfig(data: Partial<NotificationConfigData>): Promise<NotificationConfigData> {
+  const current = await getNotificationConfig();
+  
+  const updated = await prisma.systemConfig.upsert({
+    where: { id: 'default' },
+    update: {
+      telegramEnabled: data.telegramEnabled ?? current.telegramEnabled,
+      telegramBotToken: data.telegramBotToken !== undefined ? data.telegramBotToken : current.telegramBotToken,
+      telegramChatId: data.telegramChatId !== undefined ? data.telegramChatId : current.telegramChatId,
+      emailEnabled: data.emailEnabled ?? current.emailEnabled,
+      smtpHost: data.smtpHost !== undefined ? data.smtpHost : current.smtpHost,
+      smtpPort: data.smtpPort !== undefined ? Number(data.smtpPort) : current.smtpPort,
+      smtpSecure: data.smtpSecure !== undefined ? Boolean(data.smtpSecure) : current.smtpSecure,
+      smtpUser: data.smtpUser !== undefined ? data.smtpUser : current.smtpUser,
+      smtpPass: data.smtpPass !== undefined && data.smtpPass !== '••••••••' ? data.smtpPass : current.smtpPass,
+      smtpFrom: data.smtpFrom !== undefined ? data.smtpFrom : current.smtpFrom,
+      alertEmailTo: data.alertEmailTo !== undefined ? data.alertEmailTo : current.alertEmailTo,
+    },
+    create: {
+      id: 'default',
+      telegramEnabled: data.telegramEnabled ?? false,
+      telegramBotToken: data.telegramBotToken || '',
+      telegramChatId: data.telegramChatId || '',
+      emailEnabled: data.emailEnabled ?? false,
+      smtpHost: data.smtpHost || '',
+      smtpPort: data.smtpPort ? Number(data.smtpPort) : 587,
+      smtpSecure: Boolean(data.smtpSecure),
+      smtpUser: data.smtpUser || '',
+      smtpPass: data.smtpPass && data.smtpPass !== '••••••••' ? data.smtpPass : '',
+      smtpFrom: data.smtpFrom || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
+      alertEmailTo: data.alertEmailTo || '',
+    },
+  });
+
+  // Reset bot cache so token change takes effect
+  telegramBot = null;
+  lastBotToken = null;
+
+  return getNotificationConfig();
+}
+
+// ── Telegram Helpers ─────────────────────────────────────────────────────────
+
+function getBot(token?: string): TelegramBot | null {
+  const activeToken = token || cachedConfig?.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN;
+  if (!activeToken) return null;
+  
+  if (!telegramBot || lastBotToken !== activeToken) {
+    telegramBot = new TelegramBot(activeToken, { polling: false });
+    lastBotToken = activeToken;
   }
   return telegramBot;
 }
 
-async function sendTelegram(message: string): Promise<void> {
-  const bot = getBot();
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+export async function sendTelegram(message: string, overrideChatId?: string, overrideToken?: string): Promise<void> {
+  const config = await getNotificationConfig();
+  const token = overrideToken || config.telegramBotToken;
+  const chatId = overrideChatId || config.telegramChatId;
+  const bot = getBot(token);
+
   if (!bot || !chatId) {
     logger.warn('Telegram not configured — skipping notification');
     return;
   }
   try {
     await bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
-    logger.info('Telegram notification sent');
-  } catch (err) {
-    logger.error('Failed to send Telegram notification:', err);
+    logger.info('Telegram notification sent successfully');
+  } catch (err: any) {
+    logger.error('Failed to send Telegram notification:', err.message);
+    throw err;
   }
 }
 
-// ── Email ─────────────────────────────────────────────────────────────────────
+// ── Email Helpers ─────────────────────────────────────────────────────────────
 
-function getTransporter() {
-  if (!process.env.SMTP_HOST) return null;
+function getTransporter(customConfig?: Partial<NotificationConfigData>) {
+  const host = customConfig?.smtpHost || cachedConfig?.smtpHost || process.env.SMTP_HOST;
+  if (!host) return null;
+
+  const port = customConfig?.smtpPort || cachedConfig?.smtpPort || parseInt(process.env.SMTP_PORT || '587', 10);
+  const secure = customConfig?.smtpSecure ?? cachedConfig?.smtpSecure ?? (process.env.SMTP_SECURE === 'true');
+  const user = customConfig?.smtpUser || cachedConfig?.smtpUser || process.env.SMTP_USER;
+  const pass = customConfig?.smtpPass || cachedConfig?.smtpPass || process.env.SMTP_PASS;
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
+    host,
+    port,
+    secure,
+    auth: user ? { user, pass } : undefined,
   });
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  const transporter = getTransporter();
+export async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  customConfig?: Partial<NotificationConfigData>
+): Promise<void> {
+  const config = await getNotificationConfig();
+  const transporter = getTransporter(customConfig);
   if (!transporter) {
     logger.warn('Email not configured — skipping notification');
     return;
   }
   try {
+    const from = customConfig?.smtpFrom || config.smtpFrom || process.env.SMTP_FROM || 'SEGIP Monitor <notificaciones@segip.gob.bo>';
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'SEGIP Monitor',
+      from,
       to,
       subject,
       html,
     });
-    logger.info(`Email sent to ${to}`);
-  } catch (err) {
-    logger.error('Failed to send email:', err);
+    logger.info(`Email sent successfully to ${to}`);
+  } catch (err: any) {
+    logger.error('Failed to send email:', err.message);
+    throw err;
   }
 }
 
-// ── Alert notifications ───────────────────────────────────────────────────────
+// ── Alert Notifications ───────────────────────────────────────────────────────
 
 export async function sendAlert(
   service: Service,
   alert: Alert,
   result: ProbeResult
 ): Promise<void> {
+  const config = await getNotificationConfig();
   const statusEmoji = alert.type === 'DEGRADED' ? '🟡' : '🔴';
   const statusText = alert.type === 'DEGRADED' ? 'DEGRADADO' : 'CAÍDO';
 
@@ -80,181 +203,119 @@ export async function sendAlert(
   const telegramMsg = [
     `${statusEmoji} <b>[ALERTA] ${service.name}</b>`,
     `Estado: <b>${statusText}</b>`,
-    result.httpCode ? `HTTP: ${result.httpCode}` : '',
-    result.responseTime ? `Tiempo: ${result.responseTime}ms` : '',
+    result.httpCode ? `HTTP Code: <code>${result.httpCode}</code>` : '',
+    result.responseTime ? `Tiempo: <code>${result.responseTime}ms</code>` : '',
     result.error ? `Error: <code>${result.error.slice(0, 200)}</code>` : '',
+    `URL: <code>${service.url}</code>`,
     `\n🕐 ${new Date().toLocaleString('es-BO')}`,
   ]
     .filter(Boolean)
     .join('\n');
 
-  if (service.notifyTelegram) {
-    await sendTelegram(telegramMsg);
-    await prisma.alert.update({ where: { id: alert.id }, data: { notifiedTelegram: true } });
+  if (config.telegramEnabled && service.notifyTelegram) {
+    try {
+      await sendTelegram(telegramMsg);
+      await prisma.alert.update({ where: { id: alert.id }, data: { notifiedTelegram: true } });
+    } catch (err) {
+      logger.error('Error sending alert via Telegram:', err);
+    }
   }
 
   // Email message
   const emailHtml = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-      <div style="background:${alert.type === 'DEGRADED' ? '#f59e0b' : '#ef4444'};padding:20px;border-radius:8px 8px 0 0">
-        <h2 style="color:white;margin:0">${statusEmoji} ALERTA — ${service.name}</h2>
+    <div style="font-family:'Urbanist',Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+      <div style="background:${alert.type === 'DEGRADED' ? '#d97706' : '#790026'};padding:20px;color:white">
+        <h2 style="margin:0;font-size:18px">${statusEmoji} ALERTA INSTITUCIONAL — ${service.name}</h2>
+        <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9">Servicio General de Identificación Personal &bull; SEGIP</p>
       </div>
-      <div style="background:#f9fafb;padding:20px;border-radius:0 0 8px 8px">
-        <table style="width:100%;border-collapse:collapse">
-          <tr><td style="padding:8px;font-weight:bold">Estado:</td><td>${statusText}</td></tr>
-          ${result.httpCode ? `<tr><td style="padding:8px;font-weight:bold">HTTP Code:</td><td>${result.httpCode}</td></tr>` : ''}
-          ${result.responseTime ? `<tr><td style="padding:8px;font-weight:bold">Tiempo de respuesta:</td><td>${result.responseTime}ms</td></tr>` : ''}
-          <tr><td style="padding:8px;font-weight:bold">URL:</td><td><a href="${service.url}">${service.url}</a></td></tr>
-          ${result.error ? `<tr><td style="padding:8px;font-weight:bold">Error:</td><td style="color:#ef4444;font-family:monospace">${result.error}</td></tr>` : ''}
-          <tr><td style="padding:8px;font-weight:bold">Hora:</td><td>${new Date().toLocaleString('es-BO')}</td></tr>
+      <div style="background:#ffffff;padding:24px">
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Estado:</td><td style="padding:10px 0;font-weight:bold;color:${alert.type === 'DEGRADED' ? '#d97706' : '#dc2626'}">${statusText}</td></tr>
+          ${result.httpCode ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Código HTTP:</td><td style="padding:10px 0">${result.httpCode}</td></tr>` : ''}
+          ${result.responseTime ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Latencia:</td><td style="padding:10px 0">${result.responseTime} ms</td></tr>` : ''}
+          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Endpoint / URL:</td><td style="padding:10px 0"><a href="${service.url}" style="color:#790026">${service.url}</a></td></tr>
+          ${result.error ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Detalle Error:</td><td style="padding:10px 0;color:#dc2626;font-family:monospace;font-size:12px">${result.error}</td></tr>` : ''}
+          <tr><td style="padding:10px 0;font-weight:bold;color:#64748b">Fecha y Hora:</td><td style="padding:10px 0">${new Date().toLocaleString('es-BO')}</td></tr>
         </table>
       </div>
-      <p style="color:#6b7280;font-size:12px;text-align:center">SEGIP Monitor — Sistema de Monitoreo</p>
+      <div style="background:#f8fafc;padding:12px;text-align:center;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">
+        SEGIP MONITOR &bull; Notificación Automática de Disponibilidad
+      </div>
     </div>
   `;
 
   const emailRecipients = [
-    process.env.ALERT_EMAIL_TO,
+    config.alertEmailTo,
     service.notifyEmailTo,
   ]
     .filter(Boolean)
     .join(',');
 
-  if (service.notifyEmail && emailRecipients) {
-    await sendEmail(emailRecipients, `🔴 ALERTA: ${service.name} está ${statusText}`, emailHtml);
-    await prisma.alert.update({ where: { id: alert.id }, data: { notifiedEmail: true } });
+  if (config.emailEnabled && service.notifyEmail && emailRecipients) {
+    try {
+      await sendEmail(emailRecipients, `🔴 [ALERTA SEGIP] ${service.name} está ${statusText}`, emailHtml);
+      await prisma.alert.update({ where: { id: alert.id }, data: { notifiedEmail: true } });
+    } catch (err) {
+      logger.error('Error sending alert via Email:', err);
+    }
   }
 }
 
 export async function sendRecovery(service: Service, alert: Alert): Promise<void> {
+  const config = await getNotificationConfig();
   const duration = alert.resolvedAt
     ? Math.round((alert.resolvedAt.getTime() - alert.startedAt.getTime()) / 60000)
     : 0;
 
   const telegramMsg = [
     `🟢 <b>[RECUPERADO] ${service.name}</b>`,
-    `El servicio está nuevamente en línea`,
-    duration > 0 ? `Tiempo caído: <b>${duration} minutos</b>` : '',
+    `El servicio ha vuelto a responder con normalidad.`,
+    duration > 0 ? `Duración de la indisponibilidad: <b>${duration} minutos</b>` : '',
     `\n🕐 ${new Date().toLocaleString('es-BO')}`,
   ]
     .filter(Boolean)
     .join('\n');
 
-  if (service.notifyTelegram) await sendTelegram(telegramMsg);
+  if (config.telegramEnabled && service.notifyTelegram) {
+    try {
+      await sendTelegram(telegramMsg);
+    } catch (err) {
+      logger.error('Error sending recovery via Telegram:', err);
+    }
+  }
 
   const emailHtml = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-      <div style="background:#10b981;padding:20px;border-radius:8px 8px 0 0">
-        <h2 style="color:white;margin:0">🟢 RECUPERADO — ${service.name}</h2>
+    <div style="font-family:'Urbanist',Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+      <div style="background:#16a34a;padding:20px;color:white">
+        <h2 style="margin:0;font-size:18px">🟢 SERVICIO RESTABLECIDO — ${service.name}</h2>
+        <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9">Servicio General de Identificación Personal &bull; SEGIP</p>
       </div>
-      <div style="background:#f9fafb;padding:20px;border-radius:0 0 8px 8px">
-        <p>El servicio <strong>${service.name}</strong> está nuevamente en línea.</p>
-        ${duration > 0 ? `<p>Tiempo fuera de servicio: <strong>${duration} minutos</strong></p>` : ''}
-        <p>Hora de recuperación: ${new Date().toLocaleString('es-BO')}</p>
+      <div style="background:#ffffff;padding:24px">
+        <p style="font-size:14px;color:#1e293b">El servicio monitoreado ha recuperado su estado operativo normal.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:10px">
+          ${duration > 0 ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Tiempo de Indisponibilidad:</td><td style="padding:10px 0;font-weight:bold">${duration} minutos</td></tr>` : ''}
+          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Endpoint / URL:</td><td style="padding:10px 0"><a href="${service.url}" style="color:#790026">${service.url}</a></td></tr>
+          <tr><td style="padding:10px 0;font-weight:bold;color:#64748b">Hora de Recuperación:</td><td style="padding:10px 0">${new Date().toLocaleString('es-BO')}</td></tr>
+        </table>
+      </div>
+      <div style="background:#f8fafc;padding:12px;text-align:center;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">
+        SEGIP MONITOR &bull; Notificación Automática de Disponibilidad
       </div>
     </div>
   `;
 
-  const emailRecipients = [process.env.ALERT_EMAIL_TO, service.notifyEmailTo].filter(Boolean).join(',');
-  if (service.notifyEmail && emailRecipients) {
-    await sendEmail(emailRecipients, `🟢 RECUPERADO: ${service.name}`, emailHtml);
-  }
-}
-
-// ── Daily Report ──────────────────────────────────────────────────────────────
-
-export async function sendDailyReport(): Promise<void> {
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-  const services = await prisma.service.findMany({ where: { enabled: true } });
-  const alerts = await prisma.alert.findMany({
-    where: { startedAt: { gte: yesterday } },
-    include: { service: true },
-    orderBy: { startedAt: 'desc' },
-  });
-
-  // Calculate uptime for each service
-  const serviceStats = await Promise.all(
-    services.map(async (svc) => {
-      const checks = await prisma.check.findMany({
-        where: { serviceId: svc.id, timestamp: { gte: yesterday } },
-        select: { status: true, responseTime: true },
-      });
-      const total = checks.length;
-      const up = checks.filter((c) => c.status === 'UP').length;
-      const uptime = total > 0 ? ((up / total) * 100).toFixed(1) : 'N/A';
-      const avgRt = checks.reduce((acc, c) => acc + (c.responseTime || 0), 0) / (total || 1);
-      return { name: svc.name, uptime, avgResponseTime: Math.round(avgRt), total };
-    })
-  );
-
-  const totalAlerts = alerts.length;
-  const globalUptime =
-    serviceStats.length > 0
-      ? (serviceStats.reduce((acc, s) => acc + parseFloat(s.uptime || '0'), 0) / serviceStats.length).toFixed(1)
-      : 'N/A';
-
-  const telegramMsg = [
-    `📊 <b>Reporte Diario — SEGIP Monitor</b>`,
-    `📅 ${new Date().toLocaleDateString('es-BO')}`,
-    ``,
-    `🌐 Uptime global: <b>${globalUptime}%</b>`,
-    `🚨 Incidentes: <b>${totalAlerts}</b>`,
-    ``,
-    `<b>Servicios con incidentes:</b>`,
-    ...alerts.slice(0, 5).map(
-      (a) => `  • ${a.service.name}: ${a.type} (${Math.round((a.resolvedAt ? a.resolvedAt.getTime() - a.startedAt.getTime() : Date.now() - a.startedAt.getTime()) / 60000)} min)`
-    ),
+  const emailRecipients = [
+    config.alertEmailTo,
+    service.notifyEmailTo,
   ]
-    .join('\n');
+    .filter(Boolean)
+    .join(',');
 
-  await sendTelegram(telegramMsg);
-
-  const emailTo = process.env.ALERT_EMAIL_TO;
-  if (emailTo) {
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto">
-        <div style="background:#1e293b;padding:24px;border-radius:8px 8px 0 0">
-          <h2 style="color:white;margin:0">📊 Reporte Diario — SEGIP Monitor</h2>
-          <p style="color:#94a3b8;margin:8px 0 0">Últimas 24 horas</p>
-        </div>
-        <div style="background:#f8fafc;padding:24px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-            <div style="background:white;padding:16px;border-radius:8px;text-align:center;border:1px solid #e2e8f0">
-              <div style="font-size:32px;font-weight:bold;color:#10b981">${globalUptime}%</div>
-              <div style="color:#64748b">Uptime Global</div>
-            </div>
-            <div style="background:white;padding:16px;border-radius:8px;text-align:center;border:1px solid #e2e8f0">
-              <div style="font-size:32px;font-weight:bold;color:${totalAlerts > 0 ? '#ef4444' : '#10b981'}">${totalAlerts}</div>
-              <div style="color:#64748b">Incidentes</div>
-            </div>
-          </div>
-          <table style="width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden">
-            <thead>
-              <tr style="background:#1e293b;color:white">
-                <th style="padding:12px;text-align:left">Servicio</th>
-                <th style="padding:12px;text-align:center">Uptime</th>
-                <th style="padding:12px;text-align:center">T. Respuesta Avg</th>
-                <th style="padding:12px;text-align:center">Checks</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${serviceStats.map((s, i) => `
-                <tr style="background:${i % 2 === 0 ? 'white' : '#f8fafc'}">
-                  <td style="padding:10px">${s.name}</td>
-                  <td style="padding:10px;text-align:center;color:${parseFloat(s.uptime) >= 99 ? '#10b981' : parseFloat(s.uptime) >= 95 ? '#f59e0b' : '#ef4444'};font-weight:bold">${s.uptime}%</td>
-                  <td style="padding:10px;text-align:center">${s.avgResponseTime}ms</td>
-                  <td style="padding:10px;text-align:center">${s.total}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        <p style="text-align:center;color:#94a3b8;font-size:12px;padding:16px">SEGIP Monitor — Generado automáticamente</p>
-      </div>
-    `;
-    await sendEmail(emailTo, `📊 Reporte Diario SEGIP Monitor — ${new Date().toLocaleDateString('es-BO')}`, html);
+  if (config.emailEnabled && service.notifyEmail && emailRecipients) {
+    try {
+      await sendEmail(emailRecipients, `🟢 [RESTABLECIDO SEGIP] ${service.name} está Operativo`, emailHtml);
+    } catch (err) {
+      logger.error('Error sending recovery via Email:', err);
+    }
   }
 }
-
-export { sendTelegram, sendEmail };

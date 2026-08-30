@@ -192,3 +192,21 @@ model NotificationLog {
   success     Boolean
   error       String?
 }
+
+model SystemConfig {
+  id                String   @id @default("default")
+  telegramEnabled   Boolean  @default(false)
+  telegramBotToken  String?
+  telegramChatId    String?
+
+  emailEnabled      Boolean  @default(false)
+  smtpHost          String?
+  smtpPort          Int?     @default(587)
+  smtpSecure        Boolean  @default(false)
+  smtpUser          String?
+  smtpPass          String?
+  smtpFrom          String?  @default("SEGIP Monitor <notificaciones@segip.gob.bo>")
+  alertEmailTo      String?
+
+  updatedAt         DateTime @updatedAt
+}

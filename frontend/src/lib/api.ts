@@ -61,3 +61,19 @@ export const AlertAPI = {
     api.get(`/alerts${resolved !== undefined ? `?resolved=${resolved}` : ''}`).then((res) => res.data),
   acknowledge: (id: string) => api.patch(`/alerts/${id}/acknowledge`).then((res) => res.data),
 };
+
+export const ConfigAPI = {
+  getNotifications: () => api.get('/config/notifications').then((res) => res.data),
+  saveNotifications: (data: any) => api.put('/config/notifications', data).then((res) => res.data),
+  testTelegram: (data: { botToken?: string; chatId?: string }) =>
+    api.post('/config/notifications/test-telegram', data).then((res) => res.data),
+  testEmail: (data: {
+    smtpHost: string;
+    smtpPort: number;
+    smtpSecure: boolean;
+    smtpUser: string;
+    smtpPass: string;
+    smtpFrom: string;
+    testRecipient: string;
+  }) => api.post('/config/notifications/test-email', data).then((res) => res.data),
+};

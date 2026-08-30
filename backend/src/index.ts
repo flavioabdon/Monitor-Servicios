@@ -14,6 +14,7 @@ import { checksRouter } from './api/routes/checks';
 import { alertsRouter } from './api/routes/alerts';
 import { statsRouter } from './api/routes/stats';
 import { groupsRouter } from './api/routes/groups';
+import { configRouter } from './api/routes/config';
 import { errorHandler } from './middleware/errorHandler';
 import { initScheduler } from './scheduler';
 import { setSocketIO } from './utils/socketEmitter';
@@ -58,6 +59,7 @@ app.use('/api/checks', checksRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/groups', groupsRouter);
+app.use('/api/config', configRouter);
 
 // Health check
 app.get('/health', (_req, res) => {

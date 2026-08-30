@@ -27,9 +27,16 @@ import {
   Clock,
   Sparkles,
   ExternalLink,
-  Shield
+  Shield,
+  Settings,
+  Mail,
+  Send,
+  Check,
+  AlertCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
-import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI } from '@/lib/api';
+import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI, ConfigAPI } from '@/lib/api';
 import SegipLogo from '@/components/SegipLogo';
 
 export default function DashboardPage() {
@@ -43,13 +50,39 @@ export default function DashboardPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   
-  // Modal states
+  // Service Modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingService, setEditingService] = useState<any>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [probingIds, setProbingIds] = useState<Record<string, boolean>>({});
+
+  // Notification Config Modal states
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState<boolean>(false);
+  const [configTab, setConfigTab] = useState<'telegram' | 'email'>('telegram');
+  const [configSaving, setConfigSaving] = useState<boolean>(false);
+  const [showSmtpPass, setShowSmtpPass] = useState<boolean>(false);
+  const [configData, setConfigData] = useState({
+    telegramEnabled: false,
+    telegramBotToken: '',
+    telegramChatId: '',
+    emailEnabled: false,
+    smtpHost: '',
+    smtpPort: 587,
+    smtpSecure: false,
+    smtpUser: '',
+    smtpPass: '',
+    smtpFrom: 'SEGIP Monitor <notificaciones@segip.gob.bo>',
+    alertEmailTo: '',
+  });
+
+  // Test notification states
+  const [testTelegramLoading, setTestTelegramLoading] = useState<boolean>(false);
+  const [testTelegramStatus, setTestTelegramStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [testEmailLoading, setTestEmailLoading] = useState<boolean>(false);
+  const [testEmailStatus, setTestEmailStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [testEmailRecipient, setTestEmailRecipient] = useState<string>('');
 
   // Service Form State
   const [formData, setFormData] = useState({
@@ -100,6 +133,30 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchNotificationConfig = async () => {
+    try {
+      const cfg = await ConfigAPI.getNotifications();
+      setConfigData({
+        telegramEnabled: cfg.telegramEnabled ?? false,
+        telegramBotToken: cfg.telegramBotToken || '',
+        telegramChatId: cfg.telegramChatId || '',
+        emailEnabled: cfg.emailEnabled ?? false,
+        smtpHost: cfg.smtpHost || '',
+        smtpPort: cfg.smtpPort || 587,
+        smtpSecure: cfg.smtpSecure ?? false,
+        smtpUser: cfg.smtpUser || '',
+        smtpPass: cfg.smtpPass || '',
+        smtpFrom: cfg.smtpFrom || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
+        alertEmailTo: cfg.alertEmailTo || '',
+      });
+      if (cfg.alertEmailTo && !testEmailRecipient) {
+        setTestEmailRecipient(cfg.alertEmailTo.split(',')[0].trim());
+      }
+    } catch (err) {
+      console.error('Error fetching notification config:', err);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('segip_token');
     const storedUser = localStorage.getItem('segip_user');
@@ -118,6 +175,77 @@ export default function DashboardPage() {
     localStorage.removeItem('segip_token');
     localStorage.removeItem('segip_user');
     router.push('/login');
+  };
+
+  const handleOpenConfigModal = async () => {
+    await fetchNotificationConfig();
+    setTestTelegramStatus(null);
+    setTestEmailStatus(null);
+    setIsConfigModalOpen(true);
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setConfigSaving(true);
+      await ConfigAPI.saveNotifications({
+        ...configData,
+        smtpPort: Number(configData.smtpPort),
+      });
+      alert('Configuración de notificaciones guardada correctamente.');
+      setIsConfigModalOpen(false);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al guardar la configuración');
+    } finally {
+      setConfigSaving(false);
+    }
+  };
+
+  const handleTestTelegram = async () => {
+    try {
+      setTestTelegramLoading(true);
+      setTestTelegramStatus(null);
+      const res = await ConfigAPI.testTelegram({
+        botToken: configData.telegramBotToken || undefined,
+        chatId: configData.telegramChatId || undefined,
+      });
+      setTestTelegramStatus({ success: true, message: res.message || 'Mensaje de prueba enviado exitosamente' });
+    } catch (err: any) {
+      setTestTelegramStatus({
+        success: false,
+        message: err.response?.data?.error || 'Fallo al conectar con Telegram. Revise el Bot Token y Chat ID.',
+      });
+    } finally {
+      setTestTelegramLoading(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    if (!testEmailRecipient) {
+      setTestEmailStatus({ success: false, message: 'Ingrese un correo destinatario para realizar la prueba.' });
+      return;
+    }
+    try {
+      setTestEmailLoading(true);
+      setTestEmailStatus(null);
+      const res = await ConfigAPI.testEmail({
+        smtpHost: configData.smtpHost,
+        smtpPort: Number(configData.smtpPort),
+        smtpSecure: configData.smtpSecure,
+        smtpUser: configData.smtpUser,
+        smtpPass: configData.smtpPass,
+        smtpFrom: configData.smtpFrom,
+        testRecipient: testEmailRecipient,
+      });
+      setTestEmailStatus({ success: true, message: res.message || 'Correo de prueba enviado con éxito' });
+    } catch (err: any) {
+      setTestEmailStatus({
+        success: false,
+        message: err.response?.data?.error || 'Fallo al enviar correo. Verifique el host SMTP, puerto y credenciales.',
+      });
+    } finally {
+      setTestEmailLoading(false);
+    }
   };
 
   const handleTriggerProbe = async (id: string) => {
@@ -334,7 +462,17 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-sm">
         <SegipLogo size="md" />
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
+          {/* Notification Config Button */}
+          <button
+            onClick={handleOpenConfigModal}
+            className="flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
+            title="Configurar Notificaciones de Correo y Telegram"
+          >
+            <Settings className="w-3.5 h-3.5 text-[#790026]" />
+            <span className="hidden sm:inline">Configuración de Alertas</span>
+          </button>
+
           {/* Quick TV Link */}
           <button
             onClick={() => router.push('/tv')}
@@ -345,7 +483,7 @@ export default function DashboardPage() {
           </button>
 
           {/* User Profile Badge */}
-          <div className="flex items-center space-x-3 pl-3 border-l border-slate-200">
+          <div className="flex items-center space-x-3 pl-2.5 border-l border-slate-200">
             <div className="w-8 h-8 rounded-full bg-[#790026] text-white flex items-center justify-center text-xs font-bold shadow-sm">
               {user[0]?.toUpperCase() || 'A'}
             </div>
@@ -461,13 +599,21 @@ export default function DashboardPage() {
             </select>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             <button
               onClick={fetchData}
               className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 transition-colors shadow-sm"
               title="Actualizar datos"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+
+            <button
+              onClick={handleOpenConfigModal}
+              className="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all border border-slate-200"
+            >
+              <Settings className="w-4 h-4 text-[#790026]" />
+              <span>Configuración Alertas</span>
             </button>
 
             <button
@@ -659,6 +805,335 @@ export default function DashboardPage() {
       </main>
 
       {/* ───────────────────────────────────────────────────────────── */}
+      {/* MODAL: NOTIFICATIONS CONFIGURATION (TELEGRAM & CORREO SMTP) */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {isConfigModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8 max-h-[90vh] overflow-y-auto relative">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#16a34a]" />
+
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 pt-1">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 text-[#790026] border border-rose-200 flex items-center justify-center">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 leading-none">Configuración de Alertas & Notificaciones</h2>
+                  <p className="text-xs text-slate-500 mt-1">Gestione los canales de aviso institucional ante caídas o degradaciones</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsConfigModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 text-sm p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tabs for Telegram & Email */}
+            <div className="flex border-b border-slate-200 space-x-2">
+              <button
+                type="button"
+                onClick={() => setConfigTab('telegram')}
+                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${
+                  configTab === 'telegram'
+                    ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Send className="w-4 h-4 text-blue-500" />
+                <span>Telegram Bot</span>
+                {configData.telegramEnabled && (
+                  <span className="w-2 h-2 rounded-full bg-[#16a34a]" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setConfigTab('email')}
+                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${
+                  configTab === 'email'
+                    ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Mail className="w-4 h-4 text-red-500" />
+                <span>Correo Electrónico (SMTP)</span>
+                {configData.emailEnabled && (
+                  <span className="w-2 h-2 rounded-full bg-[#16a34a]" />
+                )}
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveConfig} className="space-y-4 text-sm">
+              {/* TAB 1: TELEGRAM */}
+              {configTab === 'telegram' && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm">Activar Alertas por Telegram</h3>
+                      <p className="text-xs text-slate-500">Enviar mensaje automático a grupos o canales de TI ante cualquier incidente.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={configData.telegramEnabled}
+                        onChange={(e) => setConfigData({ ...configData, telegramEnabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#790026]"></div>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Token del Bot de Telegram (TELEGRAM_BOT_TOKEN)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                      value={configData.telegramBotToken}
+                      onChange={(e) => setConfigData({ ...configData, telegramBotToken: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">Obtén el token creando un bot con <b>@BotFather</b> en Telegram.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Chat ID o ID del Canal / Grupo (TELEGRAM_CHAT_ID)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ej: -1001234567890 o 987654321"
+                      value={configData.telegramChatId}
+                      onChange={(e) => setConfigData({ ...configData, telegramChatId: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">Para grupos o canales asegúrate de añadir al bot como administrador.</p>
+                  </div>
+
+                  {/* Test Telegram Box */}
+                  <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-bold text-blue-900">Probar Notificación de Telegram</h4>
+                        <p className="text-[11px] text-blue-700">Envía un mensaje de prueba con la configuración actual.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleTestTelegram}
+                        disabled={testTelegramLoading || !configData.telegramBotToken || !configData.telegramChatId}
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+                      >
+                        {testTelegramLoading ? (
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Send className="w-3.5 h-3.5" />
+                        )}
+                        <span>Probar Telegram</span>
+                      </button>
+                    </div>
+
+                    {testTelegramStatus && (
+                      <div
+                        className={`p-2.5 rounded-xl text-xs flex items-start space-x-2 ${
+                          testTelegramStatus.success
+                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            : 'bg-red-100 text-red-900 border border-red-300'
+                        }`}
+                      >
+                        {testTelegramStatus.success ? (
+                          <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                        )}
+                        <span>{testTelegramStatus.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: EMAIL / SMTP */}
+              {configTab === 'email' && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm">Activar Alertas por Correo Electrónico</h3>
+                      <p className="text-xs text-slate-500">Enviar reporte HTML con detalles del error ante indisponibilidad.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={configData.emailEnabled}
+                        onChange={(e) => setConfigData({ ...configData, emailEnabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#790026]"></div>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Servidor SMTP Host *</label>
+                      <input
+                        type="text"
+                        placeholder="ej: smtp.segip.gob.bo o mail.gob.bo"
+                        value={configData.smtpHost}
+                        onChange={(e) => setConfigData({ ...configData, smtpHost: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Puerto SMTP</label>
+                      <input
+                        type="number"
+                        placeholder="587 o 465"
+                        value={configData.smtpPort}
+                        onChange={(e) => setConfigData({ ...configData, smtpPort: Number(e.target.value) })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="smtpSecure"
+                      checked={configData.smtpSecure}
+                      onChange={(e) => setConfigData({ ...configData, smtpSecure: e.target.checked })}
+                      className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                    />
+                    <label htmlFor="smtpSecure" className="text-xs text-slate-700 font-medium cursor-pointer">
+                      Conexión SSL/TLS directa (habitualmente para puerto 465)
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Usuario SMTP</label>
+                      <input
+                        type="text"
+                        placeholder="ej: alertas@segip.gob.bo"
+                        value={configData.smtpUser}
+                        onChange={(e) => setConfigData({ ...configData, smtpUser: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Contraseña SMTP</label>
+                      <div className="relative">
+                        <input
+                          type={showSmtpPass ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={configData.smtpPass}
+                          onChange={(e) => setConfigData({ ...configData, smtpPass: e.target.value })}
+                          className="w-full pl-3 pr-9 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSmtpPass(!showSmtpPass)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                          {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Remitente Visible (From)</label>
+                      <input
+                        type="text"
+                        placeholder='ej: SEGIP Monitor <alertas@segip.gob.bo>'
+                        value={configData.smtpFrom}
+                        onChange={(e) => setConfigData({ ...configData, smtpFrom: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Destinatarios Globales (Separados por coma)</label>
+                      <input
+                        type="text"
+                        placeholder="ej: noc@segip.gob.bo, soporte@segip.gob.bo"
+                        value={configData.alertEmailTo}
+                        onChange={(e) => setConfigData({ ...configData, alertEmailTo: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Test Email Box */}
+                  <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-2.5">
+                    <h4 className="text-xs font-bold text-[#790026]">Probar Envío de Correo SMTP</h4>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="email"
+                        placeholder="Correo destinatario para la prueba (ej: tu@segip.gob.bo)"
+                        value={testEmailRecipient}
+                        onChange={(e) => setTestEmailRecipient(e.target.value)}
+                        className="flex-1 px-3 py-1.5 bg-white border border-rose-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#790026]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleTestEmail}
+                        disabled={testEmailLoading || !configData.smtpHost || !testEmailRecipient}
+                        className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+                      >
+                        {testEmailLoading ? (
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Mail className="w-3.5 h-3.5" />
+                        )}
+                        <span>Enviar Prueba</span>
+                      </button>
+                    </div>
+
+                    {testEmailStatus && (
+                      <div
+                        className={`p-2.5 rounded-xl text-xs flex items-start space-x-2 ${
+                          testEmailStatus.success
+                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            : 'bg-red-100 text-red-900 border border-red-300'
+                        }`}
+                      >
+                        {testEmailStatus.success ? (
+                          <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                        )}
+                        <span>{testEmailStatus.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Action Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setIsConfigModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={configSaving}
+                  className="px-5 py-2 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#790026]/20 transition-all active:scale-[0.99] disabled:opacity-50"
+                >
+                  {configSaving ? 'Guardando...' : 'Guardar Configuración'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
       {/* MODAL: ADD / EDIT SERVICE */}
       {/* ───────────────────────────────────────────────────────────── */}
       {isModalOpen && (
@@ -673,7 +1148,7 @@ export default function DashboardPage() {
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 text-sm"
+                className="text-slate-400 hover:text-slate-700 text-sm p-1 rounded-lg"
               >
                 ✕
               </button>
