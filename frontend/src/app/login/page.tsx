@@ -21,10 +21,10 @@ export default function LoginPage() {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
       const res = await axios.post(`${backendUrl}/api/auth/login`, { username, password });
-      
+
       localStorage.setItem('segip_token', res.data.token);
       localStorage.setItem('segip_user', res.data.username);
-      
+
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Credenciales inválidas o servidor no disponible');
@@ -37,21 +37,20 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#f1f5f9] flex flex-col justify-between items-center relative overflow-hidden font-sans">
       {/* Top Background Floating Accent Card (matching LayoutUser in plataforma-tramites) */}
       <div className="w-full flex justify-center pt-6 px-4 absolute top-0 left-0 right-0 pointer-events-none">
-        <div className="w-[94vw] max-w-6xl h-48 rounded-3xl bg-[#b0697f]/20 border border-[#b0697f]/30 blur-[1px]" />
       </div>
 
       {/* Institutional Top Header */}
       <header className="w-full max-w-6xl px-6 py-5 flex items-center justify-between z-10">
         <SegipLogo size="md" />
 
-        <button
+        {/*         <button
           type="button"
           onClick={() => router.push('/tv')}
           className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-all shadow-sm"
         >
           <Monitor className="w-3.5 h-3.5 text-[#16a34a]" />
           <span>Modo Sala NOC</span>
-        </button>
+        </button> */}
       </header>
 
       {/* Main Login Center Card */}
@@ -61,18 +60,31 @@ export default function LoginPage() {
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#16a34a]" />
 
           {/* Logo inside Login Form */}
-          <div className="flex justify-center mb-5 pt-2">
-            <SegipLogo size="lg" showSubtitle={false} />
+          <div className="flex flex-col items-center justify-center mb-5 pt-2">
+            <img
+              src="/segip-logo.png"
+              alt="SEGIP - Servicio General de Identificación Personal"
+              className="h-12 sm:h-14 w-auto object-contain drop-shadow-sm mb-2"
+            />
+            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight text-center max-w-[320px] leading-tight mb-2">
+              Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP
+            </span>
+            {/*             <div className="inline-flex items-center space-x-1.5 bg-[#790026]/10 border border-[#790026]/20 px-3 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse" />
+              <span className="text-[10px] font-bold tracking-wider text-[#790026] uppercase">
+                SISTEMA DE MONITOREO & NOC
+              </span>
+            </div> */}
           </div>
 
           {/* Title Header */}
           <div className="text-center mb-6">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Inicio de Sesión
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight">
+              Inicio De Sesión
             </h1>
-            <p className="text-slate-500 text-xs mt-1 font-normal">
-              Ingresa tus credenciales para acceder al panel de monitoreo
-            </p>
+            {/*             <p className="text-slate-500 text-xs mt-1 font-normal">
+              Ingrese sus credenciales para acceder al panel de control
+            </p> */}
           </div>
 
           {error && (
@@ -139,14 +151,14 @@ export default function LoginPage() {
 
           {/* Quick TV Link */}
           <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-slate-500">Pantalla pública para NOC:</span>
+            {/*             <span className="text-slate-500">Pantalla pública de Monitoreo:</span> */}
             <button
               type="button"
               onClick={() => router.push('/tv')}
               className="inline-flex items-center font-semibold text-[#790026] hover:text-[#9c1b3e] transition-colors"
             >
               <Monitor className="w-3.5 h-3.5 mr-1 text-[#16a34a]" />
-              Ver Modo TV
+              Pantalla Monitoreo
             </button>
           </div>
         </div>
@@ -154,7 +166,10 @@ export default function LoginPage() {
 
       {/* Institutional Footer */}
       <footer className="w-full max-w-6xl px-6 py-6 text-center text-xs text-slate-500 z-10 border-t border-slate-200">
-        <p>
+        <p className="font-semibold text-slate-700">
+          Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP
+        </p>
+        <p className="text-[11px] text-slate-400 mt-0.5">
           Servicio General de Identificación Personal &bull; SEGIP &copy; {new Date().getFullYear()}
         </p>
       </footer>

@@ -76,10 +76,10 @@ configRouter.post('/notifications/test-telegram', async (req: Request, res: Resp
   try {
     const { botToken, chatId } = req.body;
     const testMsg = [
-      `🔔 <b>[PRUEBA DE CONEXIÓN] SEGIP MONITOR</b>`,
+      `<b>[PRUEBA DE CONEXIÓN] SEGIP MONITOR</b>`,
       `Esta es una notificación de prueba del sistema de monitoreo institucional del SEGIP.`,
-      `\n✅ <b>Integración con Telegram: CORRECTA</b>`,
-      `🕐 <i>${new Date().toLocaleString('es-BO')}</i>`,
+      `\n<b>Estado de integración con Telegram: CORRECTO</b>`,
+      `Fecha y Hora: <i>${new Date().toLocaleString('es-BO')}</i>`,
     ].join('\n');
 
     await sendTelegram(testMsg, chatId, botToken);
@@ -107,7 +107,7 @@ configRouter.post('/notifications/test-email', async (req: Request, res: Respons
     const testHtml = `
       <div style="font-family:'Urbanist',Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
         <div style="background:#790026;padding:20px;color:white">
-          <h2 style="margin:0;font-size:18px">🔔 PRUEBA DE NOTIFICACIÓN POR CORREO</h2>
+          <h2 style="margin:0;font-size:18px">PRUEBA DE NOTIFICACIÓN POR CORREO</h2>
           <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9">Servicio General de Identificación Personal &bull; SEGIP</p>
         </div>
         <div style="background:#ffffff;padding:24px">
@@ -115,7 +115,7 @@ configRouter.post('/notifications/test-email', async (req: Request, res: Respons
             Este es un correo de prueba generado desde el panel de administración de <b>SEGIP Monitor</b>.
           </p>
           <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;color:#166534;font-size:13px;margin:15px 0">
-            ✅ <b>Servidor SMTP configurado y autenticado correctamente.</b>
+            <b>Servidor SMTP configurado y autenticado correctamente.</b>
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:13px;color:#64748b">
             <tr><td style="padding:6px 0">Servidor SMTP:</td><td style="color:#1e293b">${smtpHost}:${smtpPort}</td></tr>
@@ -138,7 +138,7 @@ configRouter.post('/notifications/test-email', async (req: Request, res: Respons
       smtpFrom,
     };
 
-    await sendEmail(testRecipient, '🔔 [PRUEBA] SEGIP Monitor — Conectividad SMTP', testHtml, configOverride);
+    await sendEmail(testRecipient, '[PRUEBA] SEGIP Monitor — Conectividad SMTP', testHtml, configOverride);
     res.json({ success: true, message: `Correo de prueba enviado con éxito a ${testRecipient}` });
   } catch (err: any) {
     logger.error('Error in test Email notification:', err);

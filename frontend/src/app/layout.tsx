@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SEGIP Monitor — Plataforma de Monitoreo de Servicios del Estado',
-  description: 'Monitoreo de alta disponibilidad para páginas web, APIs REST, servicios SOAP e infraestructura del SEGIP',
+  title: 'SEGIP Monitor — Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP',
+  description: 'Sistema de Monitoreo de Alta Disponibilidad — Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP',
   icons: {
-    icon: '/logos/logo-segip.svg',
+    icon: '/segip-logo.png',
   },
 };
 

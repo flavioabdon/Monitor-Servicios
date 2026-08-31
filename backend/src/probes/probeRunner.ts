@@ -142,7 +142,7 @@ async function handleAlertLogic(
         },
       });
 
-      logger.warn(`🔴 ALERT: ${service.name} is ${alertType}`);
+      logger.warn(`[ALERTA]: ${service.name} is ${alertType}`);
 
       // Send notifications
       await sendAlert(service, alert, result);
@@ -155,7 +155,7 @@ async function handleAlertLogic(
       data: { resolvedAt: new Date() },
     });
 
-    logger.info(`🟢 RECOVERED: ${service.name}`);
+    logger.info(`[RECUPERADO]: ${service.name}`);
     await sendRecovery(service, openAlert);
     emitAlertUpdate({ type: 'ALERT_RESOLVED', serviceId: service.id });
   }

@@ -18,7 +18,8 @@ import {
   ExternalLink,
   ChevronDown,
   Info,
-  Play
+  Play,
+  X
 } from 'lucide-react';
 import { ServiceAPI } from '@/lib/api';
 
@@ -204,9 +205,10 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors text-sm font-bold"
+              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors"
+              title="Cerrar ventana"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -218,44 +220,54 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
           {/* Preset Buttons (1H, 6H, 24H, 7D, 30D, Personalizado) */}
           <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
             {[
-              { label: '1H', value: '1h' },
-              { label: '6H', value: '6h' },
-              { label: '24H', value: '24h' },
-              { label: '7D', value: '7d' },
-              { label: '30D', value: '30d' },
-              { label: 'Personalizado', value: 'custom' },
-            ].map((tab) => (
+              { key: '1h', label: '1H' },
+              { key: '6h', label: '6H' },
+              { key: '24h', label: '24H' },
+              { key: '7d', label: '7D' },
+              { key: '30d', label: '30D' },
+            ].map((p) => (
               <button
-                key={tab.value}
-                onClick={() => setPeriod(tab.value)}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  period === tab.value
-                    ? 'bg-white text-[#790026] shadow-sm border border-slate-200/80'
-                    : 'text-slate-600 hover:text-slate-900'
+                key={p.key}
+                onClick={() => setPeriod(p.key)}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  period === p.key ? 'bg-[#790026] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {tab.label}
+                {p.label}
               </button>
             ))}
+            <button
+              onClick={() => setPeriod('custom')}
+              className={`flex items-center space-x-1 px-3 py-1 rounded-lg font-semibold transition-all ${
+                period === 'custom' ? 'bg-[#790026] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Personalizado</span>
+            </button>
           </div>
 
-          {/* Custom Date Range Picker (shown when 'custom' is active or for direct tuning) */}
+          {/* Custom Date Inputs if active */}
           {period === 'custom' && (
-            <div className="flex items-center space-x-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-              <span className="text-slate-500 font-medium">Desde:</span>
-              <input
-                type="datetime-local"
-                value={customFrom}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-800"
-              />
-              <span className="text-slate-500 font-medium">Hasta:</span>
-              <input
-                type="datetime-local"
-                value={customTo}
-                onChange={(e) => setCustomTo(e.target.value)}
-                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-800"
-              />
+            <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+              <div className="flex items-center space-x-1">
+                <span className="text-slate-400 font-mono text-[11px]">Desde:</span>
+                <input
+                  type="datetime-local"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-800 font-mono text-[11px]"
+                />
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="text-slate-400 font-mono text-[11px]">Hasta:</span>
+                <input
+                  type="datetime-local"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-800 font-mono text-[11px]"
+                />
+              </div>
               <button
                 onClick={handleApplyCustomDates}
                 className="px-2.5 py-1 bg-[#790026] text-white rounded-lg font-semibold hover:bg-[#9c1b3e]"
@@ -275,9 +287,9 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
                 className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-[#790026]"
               >
                 <option value="ALL">Todos los Estados ({historyData?.summary?.total || 0})</option>
-                <option value="UP">🟢 Solo Operativos (UP)</option>
-                <option value="DEGRADED">🟡 Solo Degradados</option>
-                <option value="DOWN">🔴 Solo Caídos / Timeout</option>
+                <option value="UP">Solo Operativos (UP)</option>
+                <option value="DEGRADED">Solo Degradados (DEGRADED)</option>
+                <option value="DOWN">Solo Caídos / Timeout (DOWN)</option>
               </select>
             </div>
 

@@ -196,18 +196,17 @@ export async function sendAlert(
   result: ProbeResult
 ): Promise<void> {
   const config = await getNotificationConfig();
-  const statusEmoji = alert.type === 'DEGRADED' ? '🟡' : '🔴';
   const statusText = alert.type === 'DEGRADED' ? 'DEGRADADO' : 'CAÍDO';
 
   // Telegram message
   const telegramMsg = [
-    `${statusEmoji} <b>[ALERTA] ${service.name}</b>`,
+    `<b>[ALERTA INSTITUCIONAL] ${service.name}</b>`,
     `Estado: <b>${statusText}</b>`,
     result.httpCode ? `HTTP Code: <code>${result.httpCode}</code>` : '',
-    result.responseTime ? `Tiempo: <code>${result.responseTime}ms</code>` : '',
-    result.error ? `Error: <code>${result.error.slice(0, 200)}</code>` : '',
-    `URL: <code>${service.url}</code>`,
-    `\n🕐 ${new Date().toLocaleString('es-BO')}`,
+    result.responseTime ? `Tiempo de Respuesta: <code>${result.responseTime}ms</code>` : '',
+    result.error ? `Detalle Error: <code>${result.error.slice(0, 200)}</code>` : '',
+    `URL / Endpoint: <code>${service.url}</code>`,
+    `\nFecha y Hora: ${new Date().toLocaleString('es-BO')}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -225,7 +224,7 @@ export async function sendAlert(
   const emailHtml = `
     <div style="font-family:'Urbanist',Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
       <div style="background:${alert.type === 'DEGRADED' ? '#d97706' : '#790026'};padding:20px;color:white">
-        <h2 style="margin:0;font-size:18px">${statusEmoji} ALERTA INSTITUCIONAL — ${service.name}</h2>
+        <h2 style="margin:0;font-size:18px">ALERTA INSTITUCIONAL — ${service.name}</h2>
         <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9">Servicio General de Identificación Personal &bull; SEGIP</p>
       </div>
       <div style="background:#ffffff;padding:24px">
@@ -253,7 +252,7 @@ export async function sendAlert(
 
   if (config.emailEnabled && service.notifyEmail && emailRecipients) {
     try {
-      await sendEmail(emailRecipients, `🔴 [ALERTA SEGIP] ${service.name} está ${statusText}`, emailHtml);
+      await sendEmail(emailRecipients, `[ALERTA SEGIP] ${service.name} está ${statusText}`, emailHtml);
       await prisma.alert.update({ where: { id: alert.id }, data: { notifiedEmail: true } });
     } catch (err) {
       logger.error('Error sending alert via Email:', err);
@@ -268,10 +267,10 @@ export async function sendRecovery(service: Service, alert: Alert): Promise<void
     : 0;
 
   const telegramMsg = [
-    `🟢 <b>[RECUPERADO] ${service.name}</b>`,
+    `<b>[RESTABLECIDO] ${service.name}</b>`,
     `El servicio ha vuelto a responder con normalidad.`,
     duration > 0 ? `Duración de la indisponibilidad: <b>${duration} minutos</b>` : '',
-    `\n🕐 ${new Date().toLocaleString('es-BO')}`,
+    `\nFecha y Hora: ${new Date().toLocaleString('es-BO')}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -287,7 +286,7 @@ export async function sendRecovery(service: Service, alert: Alert): Promise<void
   const emailHtml = `
     <div style="font-family:'Urbanist',Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
       <div style="background:#16a34a;padding:20px;color:white">
-        <h2 style="margin:0;font-size:18px">🟢 SERVICIO RESTABLECIDO — ${service.name}</h2>
+        <h2 style="margin:0;font-size:18px">SERVICIO RESTABLECIDO — ${service.name}</h2>
         <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9">Servicio General de Identificación Personal &bull; SEGIP</p>
       </div>
       <div style="background:#ffffff;padding:24px">
@@ -313,9 +312,19 @@ export async function sendRecovery(service: Service, alert: Alert): Promise<void
 
   if (config.emailEnabled && service.notifyEmail && emailRecipients) {
     try {
-      await sendEmail(emailRecipients, `🟢 [RESTABLECIDO SEGIP] ${service.name} está Operativo`, emailHtml);
+      await sendEmail(emailRecipients, `[RESTABLECIDO SEGIP] ${service.name} está Operativo`, emailHtml);
     } catch (err) {
       logger.error('Error sending recovery via Email:', err);
     }
   }
 }
+
+export async function sendDailyReport(): Promise<void> {
+  try {
+    logger.info('Executing daily report notifier');
+    // Stub for daily scheduled report
+  } catch (err) {
+    logger.error('Error generating daily report:', err);
+  }
+}
+

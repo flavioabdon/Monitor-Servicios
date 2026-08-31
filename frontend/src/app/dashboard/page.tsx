@@ -35,11 +35,18 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  BarChart2
+  BarChart2,
+  ChevronDown,
+  X
 } from 'lucide-react';
 import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI, ConfigAPI } from '@/lib/api';
 import SegipLogo from '@/components/SegipLogo';
 import ServiceMetricsModal from '@/components/ServiceMetricsModal';
+import PostmanRequestBuilder, {
+  RequestBuilderValue,
+  defaultRequestBuilderValue,
+  builderToServicePayload,
+} from '@/components/PostmanRequestBuilder';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -51,7 +58,7 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
-  
+
   // Service Modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingService, setEditingService] = useState<any>(null);
@@ -60,6 +67,9 @@ export default function DashboardPage() {
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [probingIds, setProbingIds] = useState<Record<string, boolean>>({});
+  // Postman-style Request Builder state (for API_JSON & LOGIN_CHECK types)
+  const [builderValue, setBuilderValue] = useState<RequestBuilderValue>(defaultRequestBuilderValue());
+  const [serviceFormTab, setServiceFormTab] = useState<'basic' | 'request' | 'alerts'>('basic');
 
   // Notification Config Modal states
   const [isConfigModalOpen, setIsConfigModalOpen] = useState<boolean>(false);
@@ -287,14 +297,16 @@ export default function DashboardPage() {
 
   const handleOpenAddModal = () => {
     setEditingService(null);
+    setBuilderValue(defaultRequestBuilderValue());
+    setServiceFormTab('basic');
     setFormData({
       name: '',
       description: '',
-      type: 'WEB_INSTITUCIONAL',
+      type: 'API_JSON',
       url: '',
       host: '',
       groupId: groups[0]?.id || '',
-      method: 'GET',
+      method: 'POST',
       headers: '',
       body: '',
       expectedHttpCode: 200,
@@ -321,6 +333,55 @@ export default function DashboardPage() {
 
   const handleOpenEditModal = (svc: any) => {
     setEditingService(svc);
+    setServiceFormTab('basic');
+    // Rebuild builder value from saved service data
+    const existingHeaders = svc.headers as Record<string, string> | null;
+    const headerRows = existingHeaders
+      ? Object.entries(existingHeaders)
+        .filter(([k]) => k !== 'Authorization' && k !== 'Content-Type')
+        .map(([k, v]) => ({ id: Math.random().toString(36).slice(2), key: k, value: v as string, enabled: true }))
+      : [];
+    if (headerRows.length === 0) headerRows.push({ id: Math.random().toString(36).slice(2), key: '', value: '', enabled: true });
+
+    // Detect auth from headers
+    const authHeader = existingHeaders?.['Authorization'] || '';
+    let builderAuth: Partial<RequestBuilderValue> = { authType: 'none' };
+    if (authHeader.startsWith('Bearer ')) {
+      builderAuth = { authType: 'bearer', authToken: authHeader.replace('Bearer ', '') };
+    } else if (authHeader.startsWith('Basic ')) {
+      try {
+        const [u, p] = atob(authHeader.replace('Basic ', '')).split(':');
+        builderAuth = { authType: 'basic', authUsername: u, authPassword: p };
+      } catch { }
+    }
+
+    // Detect body type
+    let bodyType: RequestBuilderValue['bodyType'] = 'none';
+    let bodyJson = '{\n  \n}';
+    if (svc.body) {
+      try {
+        bodyJson = JSON.stringify(JSON.parse(svc.body), null, 2);
+        bodyType = 'json';
+      } catch {
+        bodyType = 'raw';
+      }
+    }
+
+    setBuilderValue({
+      ...defaultRequestBuilderValue(),
+      method: svc.method || 'POST',
+      url: svc.url || '',
+      headers: headerRows,
+      bodyType,
+      bodyJson,
+      expectedHttpCode: svc.expectedHttpCode || 200,
+      expectedKeyword: svc.expectedKeyword || '',
+      unexpectedKeyword: svc.unexpectedKeyword || '',
+      followRedirects: svc.followRedirects ?? true,
+      timeout: svc.timeout || 10000,
+      ...builderAuth,
+    });
+
     setFormData({
       name: svc.name,
       description: svc.description || '',
@@ -356,7 +417,9 @@ export default function DashboardPage() {
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = {
+      const isPostmanType = formData.type === 'API_JSON' || formData.type === 'LOGIN_CHECK';
+
+      let payload: any = {
         ...formData,
         timeout: Number(formData.timeout),
         interval: Number(formData.interval),
@@ -368,7 +431,27 @@ export default function DashboardPage() {
         groupId: formData.groupId || undefined,
       };
 
-      if (formData.headers && formData.headers.trim()) {
+      if (isPostmanType) {
+        // Merge Postman builder fields into the payload
+        if (!builderValue.url.trim() && !formData.url.trim()) {
+          alert('La URL del servicio es obligatoria.');
+          return;
+        }
+        const requestPayload = builderToServicePayload(builderValue);
+        payload = {
+          ...payload,
+          url: builderValue.url || formData.url,
+          host: builderValue.url || formData.url,
+          method: requestPayload.method,
+          headers: requestPayload.headers,
+          body: requestPayload.body,
+          expectedHttpCode: requestPayload.expectedHttpCode,
+          expectedKeyword: requestPayload.expectedKeyword,
+          unexpectedKeyword: requestPayload.unexpectedKeyword,
+          followRedirects: requestPayload.followRedirects,
+          timeout: requestPayload.timeout,
+        };
+      } else if (formData.headers && formData.headers.trim()) {
         try {
           payload.headers = JSON.parse(formData.headers);
         } catch {
@@ -463,18 +546,25 @@ export default function DashboardPage() {
       {/* INSTITUTIONAL NAVBAR */}
       {/* ───────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-sm">
-        <SegipLogo size="md" />
+        <div className="flex items-center space-x-4">
+          <SegipLogo size="md" />
+          <div className="hidden 2xl:block border-l border-slate-200 pl-4 py-0.5">
+            <span className="text-[11px] font-semibold text-slate-600 tracking-tight block">
+              Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP
+            </span>
+          </div>
+        </div>
 
         <div className="flex items-center space-x-2.5">
           {/* Notification Config Button */}
-          <button
+          {/* <button
             onClick={handleOpenConfigModal}
             className="flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
             title="Configurar Notificaciones de Correo y Telegram"
           >
             <Settings className="w-3.5 h-3.5 text-[#790026]" />
             <span className="hidden sm:inline">Configuración de Alertas</span>
-          </button>
+          </button> */}
 
           {/* Quick TV Link */}
           <button
@@ -482,7 +572,7 @@ export default function DashboardPage() {
             className="flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
           >
             <Monitor className="w-3.5 h-3.5 text-[#16a34a]" />
-            <span className="hidden sm:inline">Modo Sala NOC</span>
+            <span className="hidden sm:inline">Pantalla</span>
           </button>
 
           {/* User Profile Badge */}
@@ -596,9 +686,9 @@ export default function DashboardPage() {
               className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all"
             >
               <option value="ALL">Todos los Estados</option>
-              <option value="UP">🟢 Operativos (UP)</option>
-              <option value="DEGRADED">🟡 Degradados</option>
-              <option value="DOWN">🔴 Caídos (DOWN)</option>
+              <option value="UP">Operativos (UP)</option>
+              <option value="DEGRADED">Degradados (DEGRADED)</option>
+              <option value="DOWN">Caídos (DOWN / TIMEOUT)</option>
             </select>
           </div>
 
@@ -641,7 +731,7 @@ export default function DashboardPage() {
                   <th className="px-5 py-3.5">Servicio & URL / Host</th>
                   <th className="px-5 py-3.5">Tipo & Grupo</th>
                   <th className="px-5 py-3.5">Tiempo Resp.</th>
-                  <th className="px-5 py-3.5">Último Chequeo</th>
+                  <th className="px-5 py-3.5">Última Verificación</th>
                   <th className="px-5 py-3.5 text-right">Acciones</th>
                 </tr>
               </thead>
@@ -664,9 +754,8 @@ export default function DashboardPage() {
                     return (
                       <tr
                         key={svc.id}
-                        className={`hover:bg-slate-50/80 transition-colors ${
-                          !svc.enabled ? 'opacity-50' : ''
-                        }`}
+                        className={`hover:bg-slate-50/80 transition-colors ${!svc.enabled ? 'opacity-50' : ''
+                          }`}
                       >
                         {/* Status Badge */}
                         <td className="px-5 py-4 whitespace-nowrap">
@@ -796,9 +885,8 @@ export default function DashboardPage() {
                           {/* Toggle active */}
                           <button
                             onClick={() => handleToggle(svc.id)}
-                            className={`p-1.5 rounded-lg border transition-colors ${
-                              svc.enabled ? 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200' : 'bg-red-50 text-red-600 border-red-200'
-                            }`}
+                            className={`p-1.5 rounded-lg border transition-colors ${svc.enabled ? 'bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200' : 'bg-red-50 text-red-600 border-red-200'
+                              }`}
                             title={svc.enabled ? 'Pausar monitoreo' : 'Reanudar monitoreo'}
                           >
                             <Power className="w-4 h-4" />
@@ -852,9 +940,9 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => setIsConfigModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 text-sm p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -863,11 +951,10 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setConfigTab('telegram')}
-                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${
-                  configTab === 'telegram'
-                    ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
+                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${configTab === 'telegram'
+                  ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
               >
                 <Send className="w-4 h-4 text-blue-500" />
                 <span>Telegram Bot</span>
@@ -879,11 +966,10 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setConfigTab('email')}
-                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${
-                  configTab === 'email'
-                    ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
+                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${configTab === 'email'
+                  ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
               >
                 <Mail className="w-4 h-4 text-red-500" />
                 <span>Correo Electrónico (SMTP)</span>
@@ -965,11 +1051,10 @@ export default function DashboardPage() {
 
                     {testTelegramStatus && (
                       <div
-                        className={`p-2.5 rounded-xl text-xs flex items-start space-x-2 ${
-                          testTelegramStatus.success
-                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                            : 'bg-red-100 text-red-900 border border-red-300'
-                        }`}
+                        className={`p-2.5 rounded-xl text-xs flex items-start space-x-2 ${testTelegramStatus.success
+                          ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          : 'bg-red-100 text-red-900 border border-red-300'
+                          }`}
                       >
                         {testTelegramStatus.success ? (
                           <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -1121,11 +1206,10 @@ export default function DashboardPage() {
 
                     {testEmailStatus && (
                       <div
-                        className={`p-2.5 rounded-xl text-xs flex items-start space-x-2 ${
-                          testEmailStatus.success
-                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                            : 'bg-red-100 text-red-900 border border-red-300'
-                        }`}
+                        className={`p-2.5 rounded-xl text-xs flex items-start space-x-2 ${testEmailStatus.success
+                          ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          : 'bg-red-100 text-red-900 border border-red-300'
+                          }`}
                       >
                         {testEmailStatus.success ? (
                           <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -1166,30 +1250,39 @@ export default function DashboardPage() {
       {/* ───────────────────────────────────────────────────────────── */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8 max-h-[90vh] overflow-y-auto relative">
+          <div className={`bg-white border border-slate-200 rounded-3xl w-full p-6 shadow-2xl space-y-5 my-8 max-h-[92vh] overflow-y-auto relative ${(formData.type === 'API_JSON' || formData.type === 'LOGIN_CHECK') ? 'max-w-4xl' : 'max-w-2xl'
+            }`}>
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#16a34a]" />
 
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 pt-1">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <div className="flex items-center space-x-2.5">
                 <Server className="w-5 h-5 text-[#790026]" />
-                <span>{editingService ? 'Editar Servicio de Monitoreo' : 'Añadir Nuevo Servicio de Monitoreo'}</span>
-              </h2>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 leading-none">
+                    {editingService ? 'Editar Servicio' : 'Añadir Nuevo Servicio de Monitoreo'}
+                  </h2>
+                  {(formData.type === 'API_JSON' || formData.type === 'LOGIN_CHECK') && (
+                    <p className="text-xs text-slate-500 mt-0.5">Configurador de Peticiones HTTP estilo Postman</p>
+                  )}
+                </div>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 text-sm p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveService} className="space-y-4 text-sm">
+              {/* ─── Service Name & Type Row ─── */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre del Servicio *</label>
                   <input
                     type="text"
                     required
-                    placeholder="ej: Portal Ciudadano SEGIP"
+                    placeholder="ej: API de Identificación SEGIP"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
@@ -1203,191 +1296,260 @@ export default function DashboardPage() {
                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
                   >
-                    <option value="WEB_INSTITUCIONAL">🌐 Web Institucional (HTTP 2xx)</option>
-                    <option value="SISTEMA_WEB">💻 Sistema Web (Validación de Keyword)</option>
-                    <option value="API_JSON">📦 API REST / JSON</option>
-                    <option value="SOAP_WSDL">📜 SOAP WSDL (Validar ?wsdl)</option>
-                    <option value="SOAP_OPERACION">⚙️ SOAP Operación (Envelope XML)</option>
-                    <option value="LOGIN_CHECK">🔐 Login Check (Evalúa Body lógico 200)</option>
-                    <option value="PING">📡 Ping / ICMP (Por IP o Dominio)</option>
-                    <option value="SSL_CERT">🔒 Certificado SSL (Días de vencimiento)</option>
+                    <option value="WEB_INSTITUCIONAL">Web Institucional (HTTP 2xx)</option>
+                    <option value="SISTEMA_WEB">Sistema Web (Validación de Keyword)</option>
+                    <option value="API_JSON">API REST / JSON (Builder Postman)</option>
+                    <option value="SOAP_WSDL">SOAP WSDL (Validar ?wsdl)</option>
+                    <option value="SOAP_OPERACION">SOAP Operación (Envelope XML)</option>
+                    <option value="LOGIN_CHECK">Login Check (Validación Lógica)</option>
+                    <option value="PING">Ping / ICMP (Por IP o Dominio)</option>
+                    <option value="SSL_CERT">Certificado SSL (Días de vencimiento)</option>
                   </select>
                 </div>
               </div>
 
-              {/* URL or Host */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {formData.type === 'PING' ? 'Dirección IP o Hostname *' : 'URL del Servicio *'}
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder={
-                    formData.type === 'PING'
-                      ? 'ej: 192.168.1.50 o dns.segip.gob.bo'
-                      : formData.type === 'SOAP_WSDL'
-                      ? 'ej: https://servicios.segip.gob.bo/ws/Verificacion?wsdl'
-                      : 'ej: https://portal.segip.gob.bo/login'
-                  }
-                  value={formData.url}
-                  onChange={(e) => setFormData({ ...formData, url: e.target.value, host: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] font-mono text-xs"
-                />
-              </div>
-
-              {/* Group selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Grupo / Categoría</label>
-                  <select
-                    value={formData.groupId}
-                    onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
-                  >
-                    <option value="">Sin grupo</option>
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Intervalo de Chequeo (seg)</label>
-                  <input
-                    type="number"
-                    min={10}
-                    max={86400}
-                    value={formData.interval}
-                    onChange={(e) => setFormData({ ...formData, interval: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
-                  />
-                </div>
-              </div>
-
-              {/* SPECIFIC CONFIG FOR LOGIN CHECK */}
-              {formData.type === 'LOGIN_CHECK' && (
-                <div className="p-4 rounded-2xl bg-slate-50 border border-rose-200 space-y-3">
-                  <h3 className="text-xs font-bold text-[#790026] uppercase tracking-wider">
-                    Configuración de Validación Lógica de Login
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Permite detectar cuando el endpoint retorna HTTP 200 pero el body contiene mensajes de error (ej: credenciales inválidas).
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-slate-700 mb-1">Campo de Éxito en JSON</label>
+              {/* ─── POSTMAN BUILDER (for API_JSON & LOGIN_CHECK) ─── */}
+              {(formData.type === 'API_JSON' || formData.type === 'LOGIN_CHECK') && (
+                <div className="space-y-3">
+                  {/* Postman-style URL + Method bar */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">URL del Endpoint *</label>
+                    <div className="flex items-stretch border border-slate-300 rounded-xl overflow-hidden bg-slate-50 focus-within:border-[#790026] focus-within:ring-1 focus-within:ring-[#790026] transition-all">
+                      {/* Method selector */}
+                      <div className="relative flex-shrink-0">
+                        <select
+                          value={builderValue.method}
+                          onChange={(e) => setBuilderValue({ ...builderValue, method: e.target.value })}
+                          className={`h-full pl-3 pr-7 appearance-none font-bold text-xs border-r border-slate-300 bg-transparent focus:outline-none focus:ring-0 ${{
+                            GET: 'text-emerald-700',
+                            POST: 'text-amber-700',
+                            PUT: 'text-blue-700',
+                            PATCH: 'text-purple-700',
+                            DELETE: 'text-red-700',
+                            HEAD: 'text-slate-700',
+                            OPTIONS: 'text-teal-700',
+                          }[builderValue.method] || 'text-slate-700'
+                            }`}
+                        >
+                          {['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'].map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3 h-3 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+                      </div>
                       <input
                         type="text"
-                        placeholder="ej: token o accessToken"
-                        value={formData.loginSuccessField}
-                        onChange={(e) => setFormData({ ...formData, loginSuccessField: e.target.value })}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-slate-700 mb-1">Palabra Clave de Fallo en Body</label>
-                      <input
-                        type="text"
-                        placeholder="ej: invalid_credentials o error"
-                        value={formData.loginFailureKeyword}
-                        onChange={(e) => setFormData({ ...formData, loginFailureKeyword: e.target.value })}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs"
+                        required
+                        placeholder="https://api.segip.gob.bo/v1/verificar"
+                        value={builderValue.url}
+                        onChange={(e) => setBuilderValue({ ...builderValue, url: e.target.value })}
+                        className="flex-1 px-3 py-2.5 bg-transparent font-mono text-xs text-slate-900 focus:outline-none placeholder:text-slate-400"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs text-slate-700 mb-1">JSON Payload de Prueba (POST Body)</label>
-                    <textarea
-                      rows={2}
-                      placeholder='{"username": "test_monitor", "password": "password_test"}'
-                      value={formData.body}
-                      onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 font-mono text-xs"
-                    />
-                  </div>
-                </div>
-              )}
 
-              {/* SPECIFIC CONFIG FOR SOAP */}
-              {formData.type === 'SOAP_OPERACION' && (
-                <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
-                  <h3 className="text-xs font-bold text-amber-800 uppercase tracking-wider">
-                    Configuración SOAP Envelope
-                  </h3>
-                  <div>
-                    <label className="block text-xs text-slate-700 mb-1">SOAPAction Header (Opcional)</label>
-                    <input
-                      type="text"
-                      placeholder='ej: "http://tempuri.org/ConsultarDatos"'
-                      value={formData.soapAction}
-                      onChange={(e) => setFormData({ ...formData, soapAction: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-mono"
-                    />
+                  {/* Group & interval */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Grupo / Categoría</label>
+                      <select
+                        value={formData.groupId}
+                        onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      >
+                        <option value="">Sin grupo</option>
+                        {groups.map((g) => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Intervalo de Chequeo (seg)</label>
+                      <input
+                        type="number"
+                        min={10}
+                        max={86400}
+                        value={formData.interval}
+                        onChange={(e) => setFormData({ ...formData, interval: Number(e.target.value) })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Umbral Lentitud (ms)</label>
+                      <input
+                        type="number"
+                        min={100}
+                        value={formData.slowThresholdMs}
+                        onChange={(e) => setFormData({ ...formData, slowThresholdMs: Number(e.target.value) })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs text-slate-700 mb-1">XML Request Envelope</label>
-                    <textarea
-                      rows={3}
-                      placeholder="<soapenv:Envelope xmlns:...>...</soapenv:Envelope>"
-                      value={formData.soapEnvelope}
-                      onChange={(e) => setFormData({ ...formData, soapEnvelope: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 font-mono text-xs"
-                    />
-                  </div>
-                </div>
-              )}
 
-              {/* Keyword validation for Web / APIs */}
-              {(formData.type === 'WEB_INSTITUCIONAL' || formData.type === 'SISTEMA_WEB' || formData.type === 'API_JSON') && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Palabra Clave Esperada (Éxito)</label>
-                    <input
-                      type="text"
-                      placeholder="ej: SEGIP o Bienvenido"
-                      value={formData.expectedKeyword}
-                      onChange={(e) => setFormData({ ...formData, expectedKeyword: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Palabra Inesperada (Marca Degradado)</label>
-                    <input
-                      type="text"
-                      placeholder="ej: Database error o 500"
-                      value={formData.unexpectedKeyword}
-                      onChange={(e) => setFormData({ ...formData, unexpectedKeyword: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs"
-                    />
-                  </div>
-                </div>
-              )}
+                  {/* LOGIN_CHECK specific fields */}
+                  {formData.type === 'LOGIN_CHECK' && (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-2 text-xs">
+                      <p className="font-bold text-[#790026] text-[11px] uppercase tracking-wider">Validación Lógica de Login</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] text-slate-700 mb-1">Campo de Éxito (JSON field)</label>
+                          <input type="text" placeholder="token o accessToken"
+                            value={formData.loginSuccessField}
+                            onChange={(e) => setFormData({ ...formData, loginSuccessField: e.target.value })}
+                            className="w-full px-2 py-1.5 bg-white border border-rose-200 rounded-lg text-[11px] focus:outline-none focus:border-[#790026]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-slate-700 mb-1">Keyword de Fallo en Body</label>
+                          <input type="text" placeholder="invalid_credentials"
+                            value={formData.loginFailureKeyword}
+                            onChange={(e) => setFormData({ ...formData, loginFailureKeyword: e.target.value })}
+                            className="w-full px-2 py-1.5 bg-white border border-rose-200 rounded-lg text-[11px] focus:outline-none focus:border-[#790026]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Notification Checkboxes */}
-              <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center gap-6">
-                <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.notifyTelegram}
-                    onChange={(e) => setFormData({ ...formData, notifyTelegram: e.target.checked })}
-                    className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                  {/* Postman Builder Tabs */}
+                  <PostmanRequestBuilder
+                    value={builderValue}
+                    onChange={setBuilderValue}
+                    showUrlMethodBar={false}
                   />
-                  <span>Notificar por Telegram</span>
-                </label>
 
-                <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.notifyEmail}
-                    onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.checked })}
-                    className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
-                  />
-                  <span>Notificar por Correo</span>
-                </label>
-              </div>
+                  {/* Notification Checkboxes */}
+                  <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center gap-6">
+                    <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
+                      <input type="checkbox" checked={formData.notifyTelegram}
+                        onChange={(e) => setFormData({ ...formData, notifyTelegram: e.target.checked })}
+                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                      />
+                      <span>Notificar por Telegram</span>
+                    </label>
+                    <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
+                      <input type="checkbox" checked={formData.notifyEmail}
+                        onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.checked })}
+                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                      />
+                      <span>Notificar por Correo</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* ─── CLASSIC FORM (for all other types) ─── */}
+              {formData.type !== 'API_JSON' && formData.type !== 'LOGIN_CHECK' && (
+                <>
+                  {/* URL or Host */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {formData.type === 'PING' ? 'Dirección IP o Hostname *' : 'URL del Servicio *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={
+                        formData.type === 'PING'
+                          ? 'ej: 192.168.1.50 o dns.segip.gob.bo'
+                          : formData.type === 'SOAP_WSDL'
+                            ? 'ej: https://servicios.segip.gob.bo/ws/Verificacion?wsdl'
+                            : 'ej: https://portal.segip.gob.bo/login'
+                      }
+                      value={formData.url}
+                      onChange={(e) => setFormData({ ...formData, url: e.target.value, host: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] font-mono text-xs"
+                    />
+                  </div>
+
+                  {/* Group selection */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Grupo / Categoría</label>
+                      <select
+                        value={formData.groupId}
+                        onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      >
+                        <option value="">Sin grupo</option>
+                        {groups.map((g) => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Intervalo de Chequeo (seg)</label>
+                      <input type="number" min={10} max={86400} value={formData.interval}
+                        onChange={(e) => setFormData({ ...formData, interval: Number(e.target.value) })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* SPECIFIC CONFIG FOR SOAP */}
+                  {formData.type === 'SOAP_OPERACION' && (
+                    <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
+                      <h3 className="text-xs font-bold text-amber-800 uppercase tracking-wider">Configuración SOAP Envelope</h3>
+                      <div>
+                        <label className="block text-xs text-slate-700 mb-1">SOAPAction Header (Opcional)</label>
+                        <input type="text" placeholder='ej: "http://tempuri.org/ConsultarDatos"'
+                          value={formData.soapAction}
+                          onChange={(e) => setFormData({ ...formData, soapAction: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-700 mb-1">XML Request Envelope</label>
+                        <textarea rows={3} placeholder="<soapenv:Envelope xmlns:...>...</soapenv:Envelope>"
+                          value={formData.soapEnvelope}
+                          onChange={(e) => setFormData({ ...formData, soapEnvelope: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Keyword validation */}
+                  {(formData.type === 'WEB_INSTITUCIONAL' || formData.type === 'SISTEMA_WEB') && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Palabra Clave Esperada (Éxito)</label>
+                        <input type="text" placeholder="ej: SEGIP o Bienvenido"
+                          value={formData.expectedKeyword}
+                          onChange={(e) => setFormData({ ...formData, expectedKeyword: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Palabra Inesperada (Marca Degradado)</label>
+                        <input type="text" placeholder="ej: Database error o 500"
+                          value={formData.unexpectedKeyword}
+                          onChange={(e) => setFormData({ ...formData, unexpectedKeyword: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notification Checkboxes */}
+                  <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center gap-6">
+                    <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
+                      <input type="checkbox" checked={formData.notifyTelegram}
+                        onChange={(e) => setFormData({ ...formData, notifyTelegram: e.target.checked })}
+                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                      />
+                      <span>Notificar por Telegram</span>
+                    </label>
+                    <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
+                      <input type="checkbox" checked={formData.notifyEmail}
+                        onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.checked })}
+                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                      />
+                      <span>Notificar por Correo</span>
+                    </label>
+                  </div>
+                </>
+              )}
 
               {/* Modal Buttons */}
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
@@ -1428,8 +1590,11 @@ export default function DashboardPage() {
                   <p className="text-xs text-slate-500">Asistente Ollama Local</p>
                 </div>
               </div>
-              <button onClick={() => setIsAiModalOpen(false)} className="text-slate-400 hover:text-slate-700">
-                ✕
+              <button
+                onClick={() => setIsAiModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -1459,6 +1624,16 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Institutional Footer */}
+      <footer className="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-500 bg-white/50">
+        <p className="font-semibold text-slate-700">
+          Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP
+        </p>
+        <p className="text-[11px] text-slate-400 mt-0.5">
+          Servicio General de Identificación Personal &bull; SEGIP &copy; {new Date().getFullYear()}
+        </p>
+      </footer>
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* MODAL: SERVICE METRICS & ANALYTICS (GOOGLE CLOUD STYLE) */}

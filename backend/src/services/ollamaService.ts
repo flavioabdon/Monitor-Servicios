@@ -47,7 +47,7 @@ Responde de forma ejecutiva, estructurada y en español:`;
   try {
     const isUp = await isOllamaAvailable();
     if (!isUp) {
-      return `⚠️ [Ollama Local Offline]: No se pudo conectar a ${OLLAMA_HOST}. Causa técnica directa: ${context.errorMessage || `HTTP ${context.httpCode}`}.`;
+      return `[Ollama Local Offline]: No se pudo conectar a ${OLLAMA_HOST}. Causa técnica directa: ${context.errorMessage || `HTTP ${context.httpCode}`}.`;
     }
 
     const response = await axios.post(

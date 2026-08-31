@@ -4,126 +4,111 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function seed() {
-  console.log('🌱 Seeding database...');
+  console.log('[SEED] Seeding database...');
 
-  // Create admin user
+  // 1. Create Default Admin User
   const adminPassword = process.env.ADMIN_PASSWORD || 'Admin1234!';
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
   await prisma.user.upsert({
     where: { username: 'admin' },
-    update: {},
+    update: { passwordHash },
     create: {
       username: process.env.ADMIN_USERNAME || 'admin',
       passwordHash,
     },
   });
-  console.log('✅ Admin user created');
+  console.log('[SEED] Admin user created');
 
-  // Create default service groups
-  const groups = await Promise.all([
-    prisma.serviceGroup.upsert({
-      where: { name: 'Portales Web' },
-      update: {},
-      create: { name: 'Portales Web', description: 'Páginas institucionales', color: '#6366f1' },
-    }),
-    prisma.serviceGroup.upsert({
-      where: { name: 'APIs REST' },
-      update: {},
-      create: { name: 'APIs REST', description: 'Servicios REST/JSON', color: '#10b981' },
-    }),
-    prisma.serviceGroup.upsert({
-      where: { name: 'Servicios SOAP' },
-      update: {},
-      create: { name: 'Servicios SOAP', description: 'Web Services SOAP/XML', color: '#f59e0b' },
-    }),
-    prisma.serviceGroup.upsert({
-      where: { name: 'Autenticación' },
-      update: {},
-      create: { name: 'Autenticación', description: 'Servicios de login y auth', color: '#ef4444' },
-    }),
-    prisma.serviceGroup.upsert({
-      where: { name: 'Infraestructura' },
-      update: {},
-      create: { name: 'Infraestructura', description: 'Servidores y red', color: '#8b5cf6' },
-    }),
-  ]);
-  console.log(`✅ ${groups.length} service groups created`);
+  // 2. Create Service Groups
+  const groupsData = [
+    { name: 'Portales Ciudadanos', description: 'Portales web de acceso público y trámites', color: '#3b82f6' },
+    { name: 'Sistemas Internos', description: 'Aplicaciones de gestión operativa y validación', color: '#10b981' },
+    { name: 'APIs e Integraciones', description: 'Servicios REST y SOAP de interoperabilidad', color: '#8b5cf6' },
+    { name: 'Infraestructura Crítica', description: 'Servidores DNS, base de datos y pasarelas', color: '#f59e0b' },
+  ];
 
-  // Create sample services for testing
-  const portalGroup = groups[0];
-  const apiGroup = groups[1];
-  const soapGroup = groups[2];
-  const infraGroup = groups[4];
+  const groups = [];
+  for (const g of groupsData) {
+    const group = await prisma.serviceGroup.upsert({
+      where: { name: g.name },
+      update: {},
+      create: g,
+    });
+    groups.push(group);
+  }
+  console.log(`[SEED] ${groups.length} service groups created`);
 
-  await prisma.service.upsert({
-    where: { id: 'sample-web-001' },
-    update: {},
-    create: {
+  // 3. Create Sample Services
+  const sampleServices = [
+    {
       id: 'sample-web-001',
       name: 'Google (Ejemplo)',
       description: 'Servicio de ejemplo - página institucional',
-      type: 'WEB_INSTITUCIONAL',
+      type: 'WEB_INSTITUCIONAL' as const,
       url: 'https://www.google.com',
       method: 'GET',
-      interval: 60,
-      timeout: 10000,
-      groupId: portalGroup.id,
-    },
-  });
-
-  await prisma.service.upsert({
-    where: { id: 'sample-api-001' },
-    update: {},
-    create: {
-      id: 'sample-api-001',
-      name: 'JSONPlaceholder API (Ejemplo)',
-      description: 'API REST de ejemplo',
-      type: 'API_JSON',
-      url: 'https://jsonplaceholder.typicode.com/posts/1',
-      method: 'GET',
-      expectedKeyword: '"userId"',
-      interval: 60,
-      timeout: 10000,
-      groupId: apiGroup.id,
-    },
-  });
-
-  await prisma.service.upsert({
-    where: { id: 'sample-soap-001' },
-    update: {},
-    create: {
-      id: 'sample-soap-001',
-      name: 'Calculator SOAP (Ejemplo)',
-      description: 'SOAP service de ejemplo - verifica WSDL',
-      type: 'SOAP_WSDL',
-      url: 'https://www.dneonline.com/calculator.asmx?wsdl',
-      method: 'GET',
-      interval: 120,
-      timeout: 15000,
-      groupId: soapGroup.id,
-    },
-  });
-
-  await prisma.service.upsert({
-    where: { id: 'sample-ping-001' },
-    update: {},
-    create: {
-      id: 'sample-ping-001',
-      name: 'Google DNS (Ejemplo Ping)',
-      description: 'Ping a 8.8.8.8',
-      type: 'PING',
-      url: '8.8.8.8',
-      host: '8.8.8.8',
       interval: 30,
       timeout: 5000,
-      groupId: infraGroup.id,
+      expectedHttpCode: 200,
+      groupId: groups[0].id,
+      notifyTelegram: false,
+      notifyEmail: false,
     },
-  });
+    {
+      id: 'sample-api-001',
+      name: 'JSONPlaceholder API',
+      description: 'API de pruebas REST pública',
+      type: 'API_JSON' as const,
+      url: 'https://jsonplaceholder.typicode.com/posts/1',
+      method: 'GET',
+      interval: 45,
+      timeout: 8000,
+      expectedHttpCode: 200,
+      expectedKeyword: 'userId',
+      groupId: groups[2].id,
+      notifyTelegram: false,
+      notifyEmail: false,
+    },
+    {
+      id: 'sample-dns-001',
+      name: 'Cloudflare DNS (1.1.1.1)',
+      description: 'Verificación de resolución DNS pública',
+      type: 'DNS' as const,
+      url: '1.1.1.1',
+      host: '1.1.1.1',
+      interval: 60,
+      timeout: 3000,
+      groupId: groups[3].id,
+      notifyTelegram: false,
+      notifyEmail: false,
+    },
+    {
+      id: 'sample-ssl-001',
+      name: 'Certificado SSL Github',
+      description: 'Monitoreo de expiración de certificado SSL',
+      type: 'SSL_CERT' as const,
+      url: 'https://github.com',
+      host: 'github.com',
+      interval: 3600,
+      timeout: 10000,
+      sslAlertDaysBefore: 30,
+      groupId: groups[3].id,
+      notifyTelegram: false,
+      notifyEmail: false,
+    },
+  ];
 
-  console.log('✅ Sample services created');
-  console.log('\n🎉 Seed complete!');
-  console.log(`\n📋 Admin credentials:`);
+  for (const svc of sampleServices) {
+    await prisma.service.upsert({
+      where: { id: svc.id },
+      update: {},
+      create: svc,
+    });
+  }
+  console.log('[SEED] Sample services created');
+  console.log('\n[SEED] Complete!');
+  console.log('\n[CREDENTIALS] Admin credentials:');
   console.log(`   Username: ${process.env.ADMIN_USERNAME || 'admin'}`);
   console.log(`   Password: ${adminPassword}`);
 }

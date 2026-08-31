@@ -8,15 +8,56 @@ export const statsRouter = Router();
 // ──────────────────────────────────────────────
 // Public Endpoint for TV Mode (No auth needed for monitor screens)
 // ──────────────────────────────────────────────
-statsRouter.get('/tv', async (_req: Request, res: Response) => {
+statsRouter.get('/tv', async (req: Request, res: Response) => {
+  const { period = '1h', limit = '30', from: fromQuery, to: toQuery } = req.query as Record<string, string>;
+
+  let fromDate: Date;
+  let toDate: Date = toQuery ? new Date(toQuery) : new Date();
+
+  if (fromQuery) {
+    fromDate = new Date(fromQuery);
+  } else {
+    const periodMap: Record<string, number> = {
+      '15m': 0.25,
+      '1h': 1,
+      '3h': 3,
+      '6h': 6,
+      '12h': 12,
+      '24h': 24,
+      '7d': 24 * 7,
+      '30d': 24 * 30,
+    };
+    const hours = periodMap[period] || 1;
+    fromDate = new Date(Date.now() - Math.round(hours * 60 * 60 * 1000));
+  }
+
+  const defaultLimit = period === 'custom' || period === '7d' || period === '30d' ? 80 : 30;
+  const takeLimit = Math.min(Math.max(parseInt(limit, 10) || defaultLimit, 10), 200);
+
   const services = await prisma.service.findMany({
     where: { enabled: true },
     include: {
       group: { select: { id: true, name: true, color: true } },
       checks: {
+        where: {
+          timestamp: {
+            gte: fromDate,
+            lte: toDate,
+          },
+        },
         orderBy: { timestamp: 'desc' },
-        take: 10,
-        select: { status: true, responseTime: true, timestamp: true, httpCode: true, pingAvg: true, pingLoss: true, sslDaysLeft: true },
+        take: takeLimit,
+        select: {
+          id: true,
+          status: true,
+          responseTime: true,
+          timestamp: true,
+          httpCode: true,
+          pingAvg: true,
+          pingLoss: true,
+          sslDaysLeft: true,
+          error: true,
+        },
       },
       alerts: {
         where: { resolvedAt: null },
@@ -39,19 +80,27 @@ statsRouter.get('/tv', async (_req: Request, res: Response) => {
     else down++;
   });
 
-  // Global average response time in last 1 hour
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  // Global average response time in selected period
   const recentChecks = await prisma.check.findMany({
-    where: { timestamp: { gte: oneHourAgo } },
-    select: { responseTime: true, status: true },
+    where: {
+      timestamp: {
+        gte: fromDate,
+        lte: toDate,
+      },
+    },
+    select: { responseTime: true, status: true, pingAvg: true },
   });
 
-  const avgResponseTime = recentChecks.length > 0
-    ? Math.round(recentChecks.reduce((acc, c) => acc + (c.responseTime || 0), 0) / recentChecks.length)
+  const validTimes = recentChecks
+    .map((c) => c.responseTime ?? (c.pingAvg ? Math.round(c.pingAvg) : null))
+    .filter((v): v is number => v !== null && !isNaN(v));
+
+  const avgResponseTime = validTimes.length > 0
+    ? Math.round(validTimes.reduce((acc, v) => acc + v, 0) / validTimes.length)
     : 0;
 
   const totalRecent = recentChecks.length;
-  const upRecent = recentChecks.filter(c => c.status === 'UP').length;
+  const upRecent = recentChecks.filter((c) => c.status === 'UP').length;
   const uptimePercent = totalRecent > 0 ? parseFloat(((upRecent / totalRecent) * 100).toFixed(1)) : 100;
 
   const activeAlerts = await prisma.alert.findMany({
@@ -70,6 +119,9 @@ statsRouter.get('/tv', async (_req: Request, res: Response) => {
       uptimePercent,
       activeAlertCount: activeAlerts.length,
     },
+    period,
+    fromDate: fromDate.toISOString(),
+    toDate: toDate.toISOString(),
     services,
     activeAlerts,
     updatedAt: new Date().toISOString(),
