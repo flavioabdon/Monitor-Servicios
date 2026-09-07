@@ -84,4 +84,5 @@ export const ConfigAPI = {
     smtpFrom: string;
     testRecipient: string;
   }) => api.post('/config/notifications/test-email', data).then((res) => res.data),
+  sendReport: (interval?: string) => api.post('/config/notifications/report', { interval }).then((res) => res.data),
 };

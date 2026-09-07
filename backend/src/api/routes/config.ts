@@ -5,6 +5,7 @@ import {
   saveNotificationConfig,
   sendTelegram,
   sendEmail,
+  sendScheduledReport,
 } from '../../notifiers';
 import { logger } from '../../utils/logger';
 
@@ -32,6 +33,11 @@ configRouter.get('/notifications', async (req: Request, res: Response) => {
       smtpPass: config.smtpPass ? '••••••••' : '',
       smtpFrom: config.smtpFrom,
       alertEmailTo: config.alertEmailTo,
+      reportEnabled: config.reportEnabled,
+      reportTimes: config.reportTimes,
+      reportInterval: config.reportInterval,
+      reportTelegram: config.reportTelegram,
+      reportEmail: config.reportEmail,
     });
   } catch (err: any) {
     logger.error('Error fetching notification config:', err);
@@ -60,11 +66,31 @@ configRouter.put('/notifications', async (req: Request, res: Response) => {
         smtpPass: updated.smtpPass ? '••••••••' : '',
         smtpFrom: updated.smtpFrom,
         alertEmailTo: updated.alertEmailTo,
+        reportEnabled: updated.reportEnabled,
+        reportTimes: updated.reportTimes,
+        reportInterval: updated.reportInterval,
+        reportTelegram: updated.reportTelegram,
+        reportEmail: updated.reportEmail,
       },
     });
   } catch (err: any) {
     logger.error('Error saving notification config:', err);
     res.status(500).json({ error: 'Error al guardar la configuración de notificaciones' });
+  }
+});
+
+/**
+ * POST /api/config/notifications/report
+ * Generates and sends a report immediately using the saved configuration.
+ */
+configRouter.post('/notifications/report', async (req: Request, res: Response) => {
+  try {
+    const config = await getNotificationConfig();
+    await sendScheduledReport(req.body.interval || config.reportInterval);
+    res.json({ success: true, message: 'Reporte generado y enviado correctamente' });
+  } catch (err: any) {
+    logger.error('Error sending service report:', err);
+    res.status(400).json({ error: `No se pudo enviar el reporte: ${err.message || 'Error desconocido'}` });
   }
 });
 

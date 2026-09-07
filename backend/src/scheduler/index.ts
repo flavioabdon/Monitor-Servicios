@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { prisma } from '../db/client';
 import { runProbeForService } from '../probes/probeRunner';
 import { logger } from '../utils/logger';
-import { sendDailyReport } from '../notifiers';
+import { getNotificationConfig, sendScheduledReport } from '../notifiers';
 
 // Track scheduled tasks per service
 type ScheduledTaskType = ReturnType<typeof cron.schedule>;
@@ -24,10 +24,16 @@ export function initScheduler() {
     await loadAndScheduleServices();
   });
 
-  // Daily report at 8:00 AM
-  cron.schedule('0 8 * * *', async () => {
-    logger.info('Sending daily report...');
-    await sendDailyReport();
+  // Check configured report times every minute (server local timezone).
+  cron.schedule('* * * * *', async () => {
+    const config = await getNotificationConfig();
+    if (!config.reportEnabled) return;
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    const configuredTimes = config.reportTimes.split(',').map((time) => time.trim());
+    if (configuredTimes.includes(currentTime)) {
+      logger.info(`Sending service report scheduled for ${currentTime}...`);
+      await sendScheduledReport(config.reportInterval);
+    }
   });
 
   logger.info('Scheduler initialized');

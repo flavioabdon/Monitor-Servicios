@@ -208,5 +208,11 @@ model SystemConfig {
   smtpFrom          String?  @default("SEGIP Monitor <notificaciones@segip.gob.bo>")
   alertEmailTo      String?
 
+  reportEnabled     Boolean  @default(false)
+  reportTimes       String   @default("08:00")
+  reportInterval    String   @default("24h")
+  reportTelegram    Boolean  @default(true)
+  reportEmail       Boolean  @default(false)
+
   updatedAt         DateTime @updatedAt
 }
