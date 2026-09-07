@@ -75,6 +75,18 @@ docker compose up -d
 docker compose exec backend npm run seed
 ```
 
+Los datos de PostgreSQL se almacenan en el volumen persistente `pgdata`, montado
+en `/var/lib/postgresql/data`. Puedes reiniciar o recrear los contenedores sin
+perder registros:
+
+```bash
+docker compose down
+docker compose up -d
+```
+
+No uses `docker compose down -v`, porque elimina el volumen y todos los datos
+de la base de datos.
+
 ---
 
 ## Accesos del Sistema
