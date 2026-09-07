@@ -28,85 +28,14 @@ async function seed() {
     { name: 'Infraestructura Crítica', description: 'Servidores DNS, base de datos y pasarelas', color: '#f59e0b' },
   ];
 
-  const groups = [];
   for (const g of groupsData) {
-    const group = await prisma.serviceGroup.upsert({
+    await prisma.serviceGroup.upsert({
       where: { name: g.name },
       update: {},
       create: g,
     });
-    groups.push(group);
   }
-  console.log(`[SEED] ${groups.length} service groups created`);
-
-  // 3. Create Sample Services
-  const sampleServices = [
-    {
-      id: 'sample-web-001',
-      name: 'Google (Ejemplo)',
-      description: 'Servicio de ejemplo - página institucional',
-      type: 'WEB_INSTITUCIONAL' as const,
-      url: 'https://www.google.com',
-      method: 'GET',
-      interval: 30,
-      timeout: 5000,
-      expectedHttpCode: 200,
-      groupId: groups[0].id,
-      notifyTelegram: false,
-      notifyEmail: false,
-    },
-    {
-      id: 'sample-api-001',
-      name: 'JSONPlaceholder API',
-      description: 'API de pruebas REST pública',
-      type: 'API_JSON' as const,
-      url: 'https://jsonplaceholder.typicode.com/posts/1',
-      method: 'GET',
-      interval: 45,
-      timeout: 8000,
-      expectedHttpCode: 200,
-      expectedKeyword: 'userId',
-      groupId: groups[2].id,
-      notifyTelegram: false,
-      notifyEmail: false,
-    },
-    {
-      id: 'sample-dns-001',
-      name: 'Cloudflare DNS (1.1.1.1)',
-      description: 'Verificación de resolución DNS pública',
-      type: 'DNS' as const,
-      url: '1.1.1.1',
-      host: '1.1.1.1',
-      interval: 60,
-      timeout: 3000,
-      groupId: groups[3].id,
-      notifyTelegram: false,
-      notifyEmail: false,
-    },
-    {
-      id: 'sample-ssl-001',
-      name: 'Certificado SSL Github',
-      description: 'Monitoreo de expiración de certificado SSL',
-      type: 'SSL_CERT' as const,
-      url: 'https://github.com',
-      host: 'github.com',
-      interval: 3600,
-      timeout: 10000,
-      sslAlertDaysBefore: 30,
-      groupId: groups[3].id,
-      notifyTelegram: false,
-      notifyEmail: false,
-    },
-  ];
-
-  for (const svc of sampleServices) {
-    await prisma.service.upsert({
-      where: { id: svc.id },
-      update: {},
-      create: svc,
-    });
-  }
-  console.log('[SEED] Sample services created');
+  console.log(`[SEED] ${groupsData.length} service groups created`);
   console.log('\n[SEED] Complete!');
   console.log('\n[CREDENTIALS] Admin credentials:');
   console.log(`   Username: ${process.env.ADMIN_USERNAME || 'admin'}`);

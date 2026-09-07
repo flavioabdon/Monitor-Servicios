@@ -71,8 +71,8 @@ cp .env.example .env
 # 3. Levantar todos los servicios con Docker Compose
 docker compose up -d
 
-# 4. Cargar datos de prueba (seed)
-docker compose exec backend npm run seed
+# 4. Inicializar usuario administrador y grupos base
+docker compose exec backend npm run db:seed
 ```
 
 Los datos de PostgreSQL se almacenan en el volumen persistente `pgdata`, montado
