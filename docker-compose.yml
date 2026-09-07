@@ -41,6 +41,8 @@ services:
       NODE_ENV: production
       DATABASE_URL: "postgresql://segip:segip_password@postgres:5432/segip_monitor"
       JWT_SECRET: "segip_secure_jwt_secret_key_2026"
+      INSTITUTIONAL_AUTH_URL: "${INSTITUTIONAL_AUTH_URL:-http://10.0.0.59:53614/}"
+      INSTITUTIONAL_AUTH_SUCCESS_MARKER: "${INSTITUTIONAL_AUTH_SUCCESS_MARKER:-/Principal/Principal}"
       ADMIN_USERNAME: "admin"
       ADMIN_PASSWORD: "Admin1234!"
       TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"

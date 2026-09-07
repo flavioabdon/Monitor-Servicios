@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, User, AlertCircle, Monitor, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, User, AlertCircle, Monitor, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import SegipLogo from '@/components/SegipLogo';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
+  const [authType, setAuthType] = useState<'local' | 'institutional'>('local');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginPage() {
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-      const res = await axios.post(`${backendUrl}/api/auth/login`, { username, password });
+      const res = await axios.post(`${backendUrl}/api/auth/login`, { username, password, authType });
 
       localStorage.setItem('segip_token', res.data.token);
       localStorage.setItem('segip_user', res.data.username);
@@ -95,6 +96,23 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setAuthType('local')}
+                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'local' ? 'bg-white text-[#790026] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Usuario local
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthType('institutional')}
+                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'institutional' ? 'bg-white text-[#790026] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Usuario institucional
+              </button>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Usuario
@@ -109,7 +127,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all text-sm"
-                  placeholder="admin"
+                  placeholder={authType === 'institutional' ? 'usuario institucional' : 'admin'}
                 />
               </div>
             </div>
