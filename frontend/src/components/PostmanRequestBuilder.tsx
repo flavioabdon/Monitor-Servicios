@@ -185,7 +185,7 @@ const METHOD_COLORS: Record<string, string> = {
 };
 
 const inputCls =
-  'w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all';
+  'w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] transition-all';
 
 // ─────────────────────────────────────────────────────────────────────────
 // KeyValueTable — reusable for headers & form body
@@ -238,7 +238,7 @@ function KeyValueTable({ rows, onChange, keyPlaceholder = 'Key', valuePlaceholde
             type="checkbox"
             checked={row.enabled}
             onChange={(e) => update(row.id, 'enabled', e.target.checked)}
-            className="rounded border-slate-300 text-[#790026] focus:ring-[#790026] flex-shrink-0"
+            className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87] flex-shrink-0"
           />
 
           {/* Key */}
@@ -247,7 +247,7 @@ function KeyValueTable({ rows, onChange, keyPlaceholder = 'Key', valuePlaceholde
             placeholder={keyPlaceholder}
             value={row.key}
             onChange={(e) => update(row.id, 'key', e.target.value)}
-            className="flex-1 min-w-0 px-2 py-1 text-[11px] font-mono bg-transparent border-b border-transparent hover:border-slate-300 focus:border-[#790026] outline-none text-slate-900 placeholder:text-slate-400"
+            className="flex-1 min-w-0 px-2 py-1 text-[11px] font-mono bg-transparent border-b border-transparent hover:border-slate-300 focus:border-[#245b87] outline-none text-slate-900 placeholder:text-slate-400"
           />
 
           <span className="text-slate-300 text-xs flex-shrink-0">:</span>
@@ -259,7 +259,7 @@ function KeyValueTable({ rows, onChange, keyPlaceholder = 'Key', valuePlaceholde
               placeholder={valuePlaceholder}
               value={row.value}
               onChange={(e) => update(row.id, 'value', e.target.value)}
-              className="w-full px-2 py-1 text-[11px] font-mono bg-transparent border-b border-transparent hover:border-slate-300 focus:border-[#790026] outline-none text-slate-900 placeholder:text-slate-400 pr-10"
+              className="w-full px-2 py-1 text-[11px] font-mono bg-transparent border-b border-transparent hover:border-slate-300 focus:border-[#245b87] outline-none text-slate-900 placeholder:text-slate-400 pr-10"
             />
             <div className="absolute right-0 flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               {maskValues && (
@@ -301,7 +301,7 @@ function KeyValueTable({ rows, onChange, keyPlaceholder = 'Key', valuePlaceholde
       <button
         type="button"
         onClick={addRow}
-        className="flex items-center space-x-1 text-[11px] text-[#790026] hover:text-[#9c1b3e] font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors"
+        className="flex items-center space-x-1 text-[11px] text-[#245b87] hover:text-[#1b496d] font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors"
       >
         <Plus className="w-3 h-3" />
         <span>Añadir fila</span>
@@ -400,7 +400,7 @@ export default function PostmanRequestBuilder({
               onClick={() => setActiveTab(tab)}
               className={`flex items-center space-x-1.5 px-4 py-2.5 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
                 active
-                  ? 'border-[#790026] text-[#790026] bg-white'
+                  ? 'border-[#245b87] text-[#245b87] bg-white'
                   : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-white/70'
               }`}
             >
@@ -408,7 +408,7 @@ export default function PostmanRequestBuilder({
               {count !== null && (
                 <span
                   className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    active ? 'bg-[#790026] text-white' : 'bg-slate-300 text-slate-700'
+                    active ? 'bg-[#245b87] text-white' : 'bg-slate-300 text-slate-700'
                   }`}
                 >
                   {count}
@@ -625,7 +625,7 @@ export default function PostmanRequestBuilder({
                   key={bt}
                   className={`flex items-center space-x-1.5 cursor-pointer px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-all ${
                     value.bodyType === bt
-                      ? 'bg-[#790026] text-white border-[#790026] shadow-sm'
+                      ? 'bg-[#245b87] text-white border-[#245b87] shadow-sm'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
                   }`}
                 >
@@ -679,7 +679,7 @@ export default function PostmanRequestBuilder({
                   onChange={(e) => set({ bodyJson: e.target.value })}
                   placeholder={'{\n  "key": "value"\n}'}
                   spellCheck={false}
-                  className="w-full px-3 py-2 bg-slate-950 text-emerald-300 border border-slate-700 rounded-xl font-mono text-xs resize-none focus:outline-none focus:border-[#790026] leading-relaxed"
+                  className="w-full px-3 py-2 bg-slate-950 text-emerald-300 border border-slate-700 rounded-xl font-mono text-xs resize-none focus:outline-none focus:border-[#245b87] leading-relaxed"
                 />
                 {/* JSON validation */}
                 {(() => {
@@ -753,7 +753,7 @@ export default function PostmanRequestBuilder({
                   onChange={(e) => set({ bodyRaw: e.target.value })}
                   placeholder="Contenido del cuerpo de la petición..."
                   spellCheck={false}
-                  className="w-full px-3 py-2 bg-slate-900 text-slate-200 border border-slate-700 rounded-xl font-mono text-xs resize-none focus:outline-none focus:border-[#790026] leading-relaxed"
+                  className="w-full px-3 py-2 bg-slate-900 text-slate-200 border border-slate-700 rounded-xl font-mono text-xs resize-none focus:outline-none focus:border-[#245b87] leading-relaxed"
                 />
               </div>
             )}
@@ -844,7 +844,7 @@ export default function PostmanRequestBuilder({
                 id="followRedirects"
                 checked={value.followRedirects}
                 onChange={(e) => set({ followRedirects: e.target.checked })}
-                className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]"
               />
               <label htmlFor="followRedirects" className="text-[11px] text-slate-700 font-medium cursor-pointer">
                 Seguir redirecciones HTTP automáticamente (301, 302)

@@ -223,7 +223,7 @@ export async function sendAlert(
   // Email message
   const emailHtml = `
     <div style="font-family:'Urbanist',Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
-      <div style="background:${alert.type === 'DEGRADED' ? '#d97706' : '#790026'};padding:20px;color:white">
+      <div style="background:${alert.type === 'DEGRADED' ? '#d97706' : '#245b87'};padding:20px;color:white">
         <h2 style="margin:0;font-size:18px">ALERTA INSTITUCIONAL — ${service.name}</h2>
         <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9">Servicio General de Identificación Personal &bull; SEGIP</p>
       </div>
@@ -232,7 +232,7 @@ export async function sendAlert(
           <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Estado:</td><td style="padding:10px 0;font-weight:bold;color:${alert.type === 'DEGRADED' ? '#d97706' : '#dc2626'}">${statusText}</td></tr>
           ${result.httpCode ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Código HTTP:</td><td style="padding:10px 0">${result.httpCode}</td></tr>` : ''}
           ${result.responseTime ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Latencia:</td><td style="padding:10px 0">${result.responseTime} ms</td></tr>` : ''}
-          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Endpoint / URL:</td><td style="padding:10px 0"><a href="${service.url}" style="color:#790026">${service.url}</a></td></tr>
+          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Endpoint / URL:</td><td style="padding:10px 0"><a href="${service.url}" style="color:#245b87">${service.url}</a></td></tr>
           ${result.error ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Detalle Error:</td><td style="padding:10px 0;color:#dc2626;font-family:monospace;font-size:12px">${result.error}</td></tr>` : ''}
           <tr><td style="padding:10px 0;font-weight:bold;color:#64748b">Fecha y Hora:</td><td style="padding:10px 0">${new Date().toLocaleString('es-BO')}</td></tr>
         </table>
@@ -293,7 +293,7 @@ export async function sendRecovery(service: Service, alert: Alert): Promise<void
         <p style="font-size:14px;color:#1e293b">El servicio monitoreado ha recuperado su estado operativo normal.</p>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:10px">
           ${duration > 0 ? `<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Tiempo de Indisponibilidad:</td><td style="padding:10px 0;font-weight:bold">${duration} minutos</td></tr>` : ''}
-          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Endpoint / URL:</td><td style="padding:10px 0"><a href="${service.url}" style="color:#790026">${service.url}</a></td></tr>
+          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px 0;font-weight:bold;color:#64748b">Endpoint / URL:</td><td style="padding:10px 0"><a href="${service.url}" style="color:#245b87">${service.url}</a></td></tr>
           <tr><td style="padding:10px 0;font-weight:bold;color:#64748b">Hora de Recuperación:</td><td style="padding:10px 0">${new Date().toLocaleString('es-BO')}</td></tr>
         </table>
       </div>

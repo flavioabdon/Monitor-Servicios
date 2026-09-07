@@ -158,7 +158,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 md:p-6 overflow-y-auto font-sans">
       <div className="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full shadow-2xl overflow-hidden my-6 flex flex-col max-h-[92vh]">
         {/* Top Accent Gradient Ribbon */}
-        <div className="h-1.5 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#16a34a]" />
+        <div className="h-1.5 bg-gradient-to-r from-[#245b87] via-[#B73852] to-[#16a34a]" />
 
         {/* ───────────────────────────────────────────────────────────── */}
         {/* MODAL HEADER */}
@@ -166,7 +166,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
         <div className="p-5 md:px-7 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
           <div className="space-y-1">
             <div className="flex items-center space-x-2.5">
-              <span className="text-xs uppercase font-bold text-[#790026] tracking-wider bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+              <span className="text-xs uppercase font-bold text-[#245b87] tracking-wider bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
                 Métricas & Diagnóstico
               </span>
               <span className="text-xs text-slate-400">&bull;</span>
@@ -230,7 +230,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
                 key={p.key}
                 onClick={() => setPeriod(p.key)}
                 className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                  period === p.key ? 'bg-[#790026] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  period === p.key ? 'bg-[#245b87] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {p.label}
@@ -239,7 +239,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
             <button
               onClick={() => setPeriod('custom')}
               className={`flex items-center space-x-1 px-3 py-1 rounded-lg font-semibold transition-all ${
-                period === 'custom' ? 'bg-[#790026] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                period === 'custom' ? 'bg-[#245b87] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Calendar className="w-3.5 h-3.5" />
@@ -270,7 +270,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
               </div>
               <button
                 onClick={handleApplyCustomDates}
-                className="px-2.5 py-1 bg-[#790026] text-white rounded-lg font-semibold hover:bg-[#9c1b3e]"
+                className="px-2.5 py-1 bg-[#245b87] text-white rounded-lg font-semibold hover:bg-[#1b496d]"
               >
                 Filtrar
               </button>
@@ -284,7 +284,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-[#790026]"
+                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-[#245b87]"
               >
                 <option value="ALL">Todos los Estados ({historyData?.summary?.total || 0})</option>
                 <option value="UP">Solo Operativos (UP)</option>
@@ -297,7 +297,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
               <button
                 onClick={() => setActiveTab('chart')}
                 className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                  activeTab === 'chart' ? 'bg-white text-[#790026] shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  activeTab === 'chart' ? 'bg-white text-[#245b87] shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 Gráfico
@@ -305,7 +305,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
               <button
                 onClick={() => setActiveTab('logs')}
                 className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                  activeTab === 'logs' ? 'bg-white text-[#790026] shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  activeTab === 'logs' ? 'bg-white text-[#245b87] shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 Tabla de Registros
@@ -332,7 +332,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
             {/* P95 Percentile */}
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm">
               <span className="text-xs text-slate-500 font-medium">Percentil 95 (P95)</span>
-              <div className="text-2xl font-bold text-[#790026] mt-1 flex items-baseline space-x-1">
+              <div className="text-2xl font-bold text-[#245b87] mt-1 flex items-baseline space-x-1">
                 <span>{historyData?.summary?.p95ResponseTime ?? '--'}</span>
                 <span className="text-xs text-slate-500 font-normal">ms</span>
               </div>
@@ -440,8 +440,8 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
                       {/* Area Fill */}
                       <defs>
                         <linearGradient id="latencyGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#790026" stopOpacity="0.25" />
-                          <stop offset="100%" stopColor="#790026" stopOpacity="0.01" />
+                          <stop offset="0%" stopColor="#245b87" stopOpacity="0.25" />
+                          <stop offset="100%" stopColor="#245b87" stopOpacity="0.01" />
                         </linearGradient>
                       </defs>
                       <path d={areaPath} fill="url(#latencyGradient)" />
@@ -450,7 +450,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
                       <path
                         d={`M ${linePoints.replace(/ /g, ' L ')}`}
                         fill="none"
-                        stroke="#790026"
+                        stroke="#245b87"
                         strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -552,7 +552,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                     <div className="flex items-center space-x-2">
-                      <Info className="w-4 h-4 text-[#790026]" />
+                      <Info className="w-4 h-4 text-[#245b87]" />
                       <h3 className="font-bold text-slate-900 text-sm">
                         Detalle de Muestra Seleccionada (Snapshot)
                       </h3>

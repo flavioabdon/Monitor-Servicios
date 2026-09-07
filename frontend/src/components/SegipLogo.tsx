@@ -44,7 +44,7 @@ export const SegipLogo: React.FC<SegipLogoProps> = ({
           <div className="flex items-center space-x-1.5">
             {/*             {showBadge && (
               <span
-                className={`font-extrabold tracking-wider bg-[#790026] text-white rounded-md uppercase shadow-sm shadow-[#790026]/20 border border-[#790026]/30 ${badgeSizes[size]}`}
+                className={`font-extrabold tracking-wider bg-[#245b87] text-white rounded-md uppercase shadow-sm shadow-[#245b87]/20 border border-[#245b87]/30 ${badgeSizes[size]}`}
               >
                 MONITOR
               </span>

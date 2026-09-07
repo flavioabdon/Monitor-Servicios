@@ -106,7 +106,7 @@ configRouter.post('/notifications/test-email', async (req: Request, res: Respons
 
     const testHtml = `
       <div style="font-family:'Urbanist',Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
-        <div style="background:#790026;padding:20px;color:white">
+        <div style="background:#245b87;padding:20px;color:white">
           <h2 style="margin:0;font-size:18px">PRUEBA DE NOTIFICACIÓN POR CORREO</h2>
           <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9">Servicio General de Identificación Personal &bull; SEGIP</p>
         </div>

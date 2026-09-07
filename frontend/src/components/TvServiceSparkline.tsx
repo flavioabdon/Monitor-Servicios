@@ -125,8 +125,8 @@ export default function TvServiceSparkline({ checks, height = 40 }: TvServiceSpa
         >
           <defs>
             <linearGradient id={`grad-compact-${coords[0]?.check?.id || 'spark'}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#790026" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#790026" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#245b87" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#245b87" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -140,7 +140,7 @@ export default function TvServiceSparkline({ checks, height = 40 }: TvServiceSpa
             <path
               d={linePath}
               fill="none"
-              stroke="#790026"
+              stroke="#245b87"
               strokeWidth="1.75"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -155,7 +155,7 @@ export default function TvServiceSparkline({ checks, height = 40 }: TvServiceSpa
               y1={padTop - 2}
               x2={activePoint.x}
               y2={chartHeight - padBottom + 3}
-              stroke="#790026"
+              stroke="#245b87"
               strokeWidth="1"
               strokeDasharray="2,2"
               className="opacity-70"

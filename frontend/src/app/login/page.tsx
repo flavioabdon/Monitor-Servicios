@@ -7,7 +7,7 @@ import axios from 'axios';
 import SegipLogo from '@/components/SegipLogo';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [authType, setAuthType] = useState<'local' | 'institutional'>('local');
   const [error, setError] = useState('');
@@ -58,7 +58,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md px-4 py-8 z-10">
         <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-xl relative overflow-hidden">
           {/* Subtle Top Accent Border in Granate/Secondary */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#16a34a]" />
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#245b87] via-[#b8c6d3] to-[#5c8fb8]" />
 
           {/* Logo inside Login Form */}
           <div className="flex flex-col items-center justify-center mb-5 pt-2">
@@ -70,9 +70,9 @@ export default function LoginPage() {
             <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight text-center max-w-[320px] leading-tight mb-2">
               Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP
             </span>
-            {/*             <div className="inline-flex items-center space-x-1.5 bg-[#790026]/10 border border-[#790026]/20 px-3 py-0.5 rounded-full">
+            {/*             <div className="inline-flex items-center space-x-1.5 bg-[#245b87]/10 border border-[#245b87]/20 px-3 py-0.5 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse" />
-              <span className="text-[10px] font-bold tracking-wider text-[#790026] uppercase">
+              <span className="text-[10px] font-bold tracking-wider text-[#245b87] uppercase">
                 SISTEMA DE MONITOREO & NOC
               </span>
             </div> */}
@@ -100,14 +100,14 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setAuthType('local')}
-                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'local' ? 'bg-white text-[#790026] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'local' ? 'bg-white text-[#245b87] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Usuario local
               </button>
               <button
                 type="button"
                 onClick={() => setAuthType('institutional')}
-                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'institutional' ? 'bg-white text-[#790026] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'institutional' ? 'bg-white text-[#245b87] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Usuario institucional
               </button>
@@ -126,8 +126,8 @@ export default function LoginPage() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all text-sm"
-                  placeholder={authType === 'institutional' ? 'usuario institucional' : 'admin'}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] transition-all text-sm"
+                  placeholder={authType === 'institutional' ? 'usuario institucional' : ''}
                 />
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] transition-all text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -154,7 +154,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-[#790026] hover:bg-[#9c1b3e] text-white font-semibold rounded-xl shadow-md shadow-[#790026]/20 flex items-center justify-center space-x-2 transition-all disabled:opacity-50 text-sm active:scale-[0.99]"
+              className="w-full mt-2 py-3 px-4 bg-[#245b87] hover:bg-[#1b496d] text-white font-semibold rounded-xl shadow-md shadow-[#245b87]/20 flex items-center justify-center space-x-2 transition-all disabled:opacity-50 text-sm active:scale-[0.99]"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -173,7 +173,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => router.push('/tv')}
-              className="inline-flex items-center font-semibold text-[#790026] hover:text-[#9c1b3e] transition-colors"
+              className="inline-flex items-center font-semibold text-[#245b87] hover:text-[#1b496d] transition-colors"
             >
               <Monitor className="w-3.5 h-3.5 mr-1 text-[#16a34a]" />
               Pantalla Monitoreo

@@ -262,7 +262,7 @@ export default function TvModePage() {
       case 'SOAP_OPERACION':
         return <Server className="w-4 h-4 text-amber-600" />;
       case 'LOGIN_CHECK':
-        return <Lock className="w-4 h-4 text-[#790026]" />;
+        return <Lock className="w-4 h-4 text-[#245b87]" />;
       case 'PING':
         return <Wifi className="w-4 h-4 text-teal-600" />;
       case 'SSL_CERT':
@@ -276,8 +276,8 @@ export default function TvModePage() {
     return (
       <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center text-slate-800 font-sans">
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-4 border-[#790026] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-semibold tracking-widest text-[#790026]">INICIALIZANDO MONITOREO SALA NOC...</p>
+          <div className="w-12 h-12 border-4 border-[#245b87] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-semibold tracking-widest text-[#245b87]">INICIALIZANDO MONITOREO SALA NOC...</p>
         </div>
       </div>
     );
@@ -287,7 +287,7 @@ export default function TvModePage() {
   const groupsMap = new Map<string, { name: string; color: string; services: ServiceItem[] }>();
   data?.services.forEach((s) => {
     const groupName = s.group?.name || 'Servicios Institucionales';
-    const groupColor = s.group?.color || '#790026';
+    const groupColor = s.group?.color || '#245b87';
     if (!groupsMap.has(groupName)) {
       groupsMap.set(groupName, { name: groupName, color: groupColor, services: [] });
     }
@@ -327,7 +327,7 @@ export default function TvModePage() {
         {/* Center: Global Time Filter Bar with Custom Date Option */}
         <div className="flex items-center justify-center bg-slate-100/90 p-1.5 rounded-xl border border-slate-200 shadow-inner overflow-x-auto">
           <div className="flex items-center space-x-1 text-slate-500 mr-2 px-1 text-xs font-semibold">
-            <Clock className="w-3.5 h-3.5 text-[#790026]" />
+            <Clock className="w-3.5 h-3.5 text-[#245b87]" />
             <span className="hidden md:inline text-[11px]">Rango Global:</span>
           </div>
           <div className="flex items-center space-x-1">
@@ -339,7 +339,7 @@ export default function TvModePage() {
                   type="button"
                   onClick={() => handlePeriodChange(tp.key)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${isActive
-                    ? 'bg-[#790026] text-white shadow-sm ring-1 ring-[#790026]/30'
+                    ? 'bg-[#245b87] text-white shadow-sm ring-1 ring-[#245b87]/30'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
                     }`}
                 >
@@ -353,7 +353,7 @@ export default function TvModePage() {
               type="button"
               onClick={() => setShowCustomDatePanel(!showCustomDatePanel)}
               className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${timePeriod === 'custom'
-                ? 'bg-[#790026] text-white shadow-sm ring-1 ring-[#790026]/30'
+                ? 'bg-[#245b87] text-white shadow-sm ring-1 ring-[#245b87]/30'
                 : 'text-slate-700 hover:text-slate-900 hover:bg-white/80 border border-slate-200/80 bg-white/50'
                 }`}
             >
@@ -372,7 +372,7 @@ export default function TvModePage() {
             className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all shadow-sm flex items-center"
             title="Refrescar ahora"
           >
-            <RefreshCw className={`w-4 h-4 text-slate-600 ${isRefreshing ? 'animate-spin text-[#790026]' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-slate-600 ${isRefreshing ? 'animate-spin text-[#245b87]' : ''}`} />
           </button>
 
           {/* Refresh countdown ring */}
@@ -382,7 +382,7 @@ export default function TvModePage() {
           </div>
 
           {/* Digital Clock */}
-          <div className="flex items-center space-x-1.5 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-xl text-[#790026] font-bold text-base md:text-lg shadow-inner font-mono">
+          <div className="flex items-center space-x-1.5 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-xl text-[#245b87] font-bold text-base md:text-lg shadow-inner font-mono">
             <span>{currentTime || '00:00:00'}</span>
           </div>
 
@@ -398,10 +398,10 @@ export default function TvModePage() {
 
         {/* ── POPUP / PANEL: CUSTOM DATE RANGE SELECTOR ── */}
         {showCustomDatePanel && (
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[95%] max-w-xl bg-white border-2 border-[#790026]/30 rounded-2xl shadow-2xl p-4 z-50 animate-fadeIn">
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[95%] max-w-xl bg-white border-2 border-[#245b87]/30 rounded-2xl shadow-2xl p-4 z-50 animate-fadeIn">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
               <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs">
-                <Calendar className="w-4 h-4 text-[#790026]" />
+                <Calendar className="w-4 h-4 text-[#245b87]" />
                 <span>Filtrar Todos los Cards por Rango Personalizado</span>
               </div>
               <button
@@ -441,7 +441,7 @@ export default function TvModePage() {
                   type="datetime-local"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                  className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                 />
               </div>
               <div>
@@ -450,7 +450,7 @@ export default function TvModePage() {
                   type="datetime-local"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                  className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                 />
               </div>
             </div>
@@ -467,7 +467,7 @@ export default function TvModePage() {
               <button
                 type="button"
                 onClick={handleApplyCustomDates}
-                className="flex items-center space-x-1.5 px-4 py-1.5 text-xs font-bold text-white bg-[#790026] hover:bg-[#9c1b3e] rounded-xl shadow-md shadow-[#790026]/20 transition-all active:scale-[0.99]"
+                className="flex items-center space-x-1.5 px-4 py-1.5 text-xs font-bold text-white bg-[#245b87] hover:bg-[#1b496d] rounded-xl shadow-md shadow-[#245b87]/20 transition-all active:scale-[0.99]"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Aplicar Rango a Toda la TV</span>
@@ -507,7 +507,7 @@ export default function TvModePage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5 z-10">
         {/* Total Services */}
         <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#790026]" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[#245b87]" />
           <span className="text-xs text-slate-500 font-semibold">Total Servicios</span>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-3xl font-extrabold text-slate-900">{data?.summary.total || 0}</span>
@@ -568,7 +568,7 @@ export default function TvModePage() {
           <div className="absolute top-0 left-0 right-0 h-1 bg-[#B73852]" />
           <span className="text-xs text-slate-500 font-semibold">Uptime Global</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-3xl font-extrabold text-[#790026]">{data?.summary.uptimePercent || 100}%</span>
+            <span className="text-3xl font-extrabold text-[#245b87]">{data?.summary.uptimePercent || 100}%</span>
             <span className="text-xs text-[#16a34a] font-semibold">SLA OK</span>
           </div>
         </div>
@@ -597,7 +597,7 @@ export default function TvModePage() {
                 const isDegraded = status === 'DEGRADED';
                 const isDown = status === 'DOWN' || status === 'TIMEOUT';
 
-                let cardBorder = 'border-slate-200 hover:border-[#790026]/70';
+                let cardBorder = 'border-slate-200 hover:border-[#245b87]/70';
                 let statusBadge = 'bg-emerald-50 text-[#16a34a] border-emerald-200';
                 let statusText = 'UP';
 
@@ -632,7 +632,7 @@ export default function TvModePage() {
                             {getServiceIcon(svc.type)}
                           </div>
                           <h3
-                            className="font-bold text-xs text-slate-900 truncate tracking-tight group-hover:text-[#790026] transition-colors"
+                            className="font-bold text-xs text-slate-900 truncate tracking-tight group-hover:text-[#245b87] transition-colors"
                             title={svc.name}
                           >
                             {svc.name}
@@ -685,7 +685,7 @@ export default function TvModePage() {
                           <span
                             className={`px-1 py-0.2 text-[9px] font-semibold rounded ${lastCheck.sslDaysLeft < 15
                               ? 'bg-red-50 text-red-700 border border-red-200'
-                              : 'bg-rose-50 text-[#790026] border border-rose-200'
+                              : 'bg-rose-50 text-[#245b87] border border-rose-200'
                               }`}
                           >
                             SSL:{lastCheck.sslDaysLeft}d
@@ -699,7 +699,7 @@ export default function TvModePage() {
                         )}
 
                         {/* Hint Icon on Hover */}
-                        <ExternalLink className="w-3 h-3 text-slate-300 group-hover:text-[#790026] transition-colors ml-0.5" />
+                        <ExternalLink className="w-3 h-3 text-slate-300 group-hover:text-[#245b87] transition-colors ml-0.5" />
                       </div>
                     </div>
                   </div>

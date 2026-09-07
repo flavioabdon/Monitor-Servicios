@@ -525,7 +525,7 @@ export default function DashboardPage() {
       case 'SOAP_OPERACION':
         return <span className="bg-orange-50 text-orange-800 border border-orange-200 px-2.5 py-0.5 rounded-lg text-xs font-semibold">SOAP Operación</span>;
       case 'LOGIN_CHECK':
-        return <span className="bg-rose-50 text-[#790026] border border-rose-200 px-2.5 py-0.5 rounded-lg text-xs font-semibold">Login Check</span>;
+        return <span className="bg-rose-50 text-[#245b87] border border-rose-200 px-2.5 py-0.5 rounded-lg text-xs font-semibold">Login Check</span>;
       case 'PING':
         return <span className="bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-0.5 rounded-lg text-xs font-semibold">Ping / ICMP</span>;
       case 'SSL_CERT':
@@ -562,7 +562,7 @@ export default function DashboardPage() {
             className="flex items-center space-x-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-sm"
             title="Configurar Notificaciones de Correo y Telegram"
           >
-            <Settings className="w-3.5 h-3.5 text-[#790026]" />
+            <Settings className="w-3.5 h-3.5 text-[#245b87]" />
             <span className="hidden sm:inline">Configuración de Alertas</span>
           </button> */}
 
@@ -577,7 +577,7 @@ export default function DashboardPage() {
 
           {/* User Profile Badge */}
           <div className="flex items-center space-x-3 pl-2.5 border-l border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-[#790026] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-[#245b87] text-white flex items-center justify-center text-xs font-bold shadow-sm">
               {user[0]?.toUpperCase() || 'A'}
             </div>
             <div className="text-right hidden sm:block">
@@ -600,13 +600,7 @@ export default function DashboardPage() {
       {/* ───────────────────────────────────────────────────────────── */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6 z-10">
         {/* KPI Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-[#790026]" />
-            <span className="text-xs text-slate-500 font-medium">Servicios Monitoreados</span>
-            <div className="text-2xl font-bold text-slate-900 mt-2">{services.length}</div>
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-[#16a34a]" />
             <span className="text-xs text-[#16a34a] font-semibold flex items-center">
@@ -637,17 +631,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-[#B73852]" />
-            <span className="text-xs text-slate-500 font-medium">Uptime Global 24h</span>
-            <div className="text-2xl font-bold text-[#790026] mt-2">{stats?.globalUptime || '100.00'}%</div>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-500" />
-            <span className="text-xs text-slate-500 font-medium">Latencia Promedio</span>
-            <div className="text-2xl font-bold text-slate-800 mt-2">{stats?.avgResponseTime || 0} ms</div>
-          </div>
         </div>
 
         {/* Action Controls & Filters */}
@@ -661,7 +644,7 @@ export default function DashboardPage() {
                 placeholder="Buscar servicio por nombre, URL o IP..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] transition-all"
               />
             </div>
 
@@ -669,7 +652,7 @@ export default function DashboardPage() {
             <select
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all"
+              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] transition-all"
             >
               <option value="ALL">Todos los Grupos</option>
               {groups.map((g) => (
@@ -683,7 +666,7 @@ export default function DashboardPage() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] transition-all"
+              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] transition-all"
             >
               <option value="ALL">Todos los Estados</option>
               <option value="UP">Operativos (UP)</option>
@@ -705,13 +688,13 @@ export default function DashboardPage() {
               onClick={handleOpenConfigModal}
               className="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all border border-slate-200"
             >
-              <Settings className="w-4 h-4 text-[#790026]" />
+              <Settings className="w-4 h-4 text-[#245b87]" />
               <span>Configuración Alertas</span>
             </button>
 
             <button
               onClick={handleOpenAddModal}
-              className="flex items-center space-x-2 bg-[#790026] hover:bg-[#9c1b3e] text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-[#790026]/20 transition-all active:scale-[0.99]"
+              className="flex items-center space-x-2 bg-[#245b87] hover:bg-[#1b496d] text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-[#245b87]/20 transition-all active:scale-[0.99]"
             >
               <Plus className="w-4 h-4" />
               <span>Añadir Servicio</span>
@@ -790,9 +773,9 @@ export default function DashboardPage() {
                           onClick={() => setMetricsService(svc)}
                           title="Haga clic para ver gráficos y métricas de este servicio"
                         >
-                          <div className="font-bold text-slate-900 group-hover:text-[#790026] transition-colors tracking-tight flex items-center space-x-2">
+                          <div className="font-bold text-slate-900 group-hover:text-[#245b87] transition-colors tracking-tight flex items-center space-x-2">
                             <span>{svc.name}</span>
-                            <BarChart2 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#790026]" />
+                            <BarChart2 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#245b87]" />
                             {!svc.enabled && (
                               <span className="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">Deshabilitado</span>
                             )}
@@ -832,15 +815,15 @@ export default function DashboardPage() {
                           onClick={() => setMetricsService(svc)}
                           title="Ver historial de latencia"
                         >
-                          <div className="text-slate-900 font-bold font-mono group-hover:text-[#790026] flex items-center space-x-1">
+                          <div className="text-slate-900 font-bold font-mono group-hover:text-[#245b87] flex items-center space-x-1">
                             <span>{lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'} ms</span>
-                            <BarChart2 className="w-3 h-3 text-[#790026] opacity-60 group-hover:opacity-100" />
+                            <BarChart2 className="w-3 h-3 text-[#245b87] opacity-60 group-hover:opacity-100" />
                           </div>
                           {lastCheck?.httpCode && (
                             <div className="text-[11px] text-slate-500">HTTP {lastCheck.httpCode}</div>
                           )}
                           {lastCheck?.sslDaysLeft !== undefined && lastCheck?.sslDaysLeft !== null && (
-                            <div className="text-[11px] text-[#790026] font-semibold">SSL: {lastCheck.sslDaysLeft} días</div>
+                            <div className="text-[11px] text-[#245b87] font-semibold">SSL: {lastCheck.sslDaysLeft} días</div>
                           )}
                         </td>
 
@@ -854,7 +837,7 @@ export default function DashboardPage() {
                           {/* Metrics / Chart button */}
                           <button
                             onClick={() => setMetricsService(svc)}
-                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-[#790026] border border-rose-200 transition-colors"
+                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-[#245b87] border border-rose-200 transition-colors"
                             title="Ver métricas y gráficos estilo Google Cloud"
                           >
                             <BarChart2 className="w-4 h-4" />
@@ -864,10 +847,10 @@ export default function DashboardPage() {
                           {(isDegraded || isDown) && (
                             <button
                               onClick={() => handleAnalyzeWithAi(svc)}
-                              className="p-1.5 rounded-lg bg-rose-50 text-[#790026] hover:bg-rose-100 border border-rose-200 transition-colors"
+                              className="p-1.5 rounded-lg bg-rose-50 text-[#245b87] hover:bg-rose-100 border border-rose-200 transition-colors"
                               title="Diagnosticar fallo con Ollama IA"
                             >
-                              <Bot className="w-4 h-4 inline mr-1 text-[#790026]" />
+                              <Bot className="w-4 h-4 inline mr-1 text-[#245b87]" />
                               <span className="text-xs font-semibold">Diagnosticar</span>
                             </button>
                           )}
@@ -926,11 +909,11 @@ export default function DashboardPage() {
       {isConfigModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8 max-h-[90vh] overflow-y-auto relative">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#16a34a]" />
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#245b87] via-[#B73852] to-[#16a34a]" />
 
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 pt-1">
               <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-rose-50 text-[#790026] border border-rose-200 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 text-[#245b87] border border-rose-200 flex items-center justify-center">
                   <Settings className="w-5 h-5" />
                 </div>
                 <div>
@@ -952,7 +935,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => setConfigTab('telegram')}
                 className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${configTab === 'telegram'
-                  ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
+                  ? 'border-[#245b87] text-[#245b87] bg-rose-50/50 rounded-t-xl'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
                   }`}
               >
@@ -967,7 +950,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => setConfigTab('email')}
                 className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all ${configTab === 'email'
-                  ? 'border-[#790026] text-[#790026] bg-rose-50/50 rounded-t-xl'
+                  ? 'border-[#245b87] text-[#245b87] bg-rose-50/50 rounded-t-xl'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
                   }`}
               >
@@ -995,7 +978,7 @@ export default function DashboardPage() {
                         onChange={(e) => setConfigData({ ...configData, telegramEnabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#790026]"></div>
+                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#245b87]"></div>
                     </label>
                   </div>
 
@@ -1008,7 +991,7 @@ export default function DashboardPage() {
                       placeholder="ej: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
                       value={configData.telegramBotToken}
                       onChange={(e) => setConfigData({ ...configData, telegramBotToken: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                     />
                     <p className="text-[11px] text-slate-500 mt-1">Obtén el token creando un bot con <b>@BotFather</b> en Telegram.</p>
                   </div>
@@ -1022,7 +1005,7 @@ export default function DashboardPage() {
                       placeholder="ej: -1001234567890 o 987654321"
                       value={configData.telegramChatId}
                       onChange={(e) => setConfigData({ ...configData, telegramChatId: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                     />
                     <p className="text-[11px] text-slate-500 mt-1">Para grupos o canales asegúrate de añadir al bot como administrador.</p>
                   </div>
@@ -1083,7 +1066,7 @@ export default function DashboardPage() {
                         onChange={(e) => setConfigData({ ...configData, emailEnabled: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#790026]"></div>
+                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#245b87]"></div>
                     </label>
                   </div>
 
@@ -1095,7 +1078,7 @@ export default function DashboardPage() {
                         placeholder="ej: smtp.segip.gob.bo o mail.gob.bo"
                         value={configData.smtpHost}
                         onChange={(e) => setConfigData({ ...configData, smtpHost: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                     <div>
@@ -1105,7 +1088,7 @@ export default function DashboardPage() {
                         placeholder="587 o 465"
                         value={configData.smtpPort}
                         onChange={(e) => setConfigData({ ...configData, smtpPort: Number(e.target.value) })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                   </div>
@@ -1116,7 +1099,7 @@ export default function DashboardPage() {
                       id="smtpSecure"
                       checked={configData.smtpSecure}
                       onChange={(e) => setConfigData({ ...configData, smtpSecure: e.target.checked })}
-                      className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                      className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]"
                     />
                     <label htmlFor="smtpSecure" className="text-xs text-slate-700 font-medium cursor-pointer">
                       Conexión SSL/TLS directa (habitualmente para puerto 465)
@@ -1131,7 +1114,7 @@ export default function DashboardPage() {
                         placeholder="ej: alertas@segip.gob.bo"
                         value={configData.smtpUser}
                         onChange={(e) => setConfigData({ ...configData, smtpUser: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                     <div>
@@ -1142,7 +1125,7 @@ export default function DashboardPage() {
                           placeholder="••••••••"
                           value={configData.smtpPass}
                           onChange={(e) => setConfigData({ ...configData, smtpPass: e.target.value })}
-                          className="w-full pl-3 pr-9 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                          className="w-full pl-3 pr-9 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                         />
                         <button
                           type="button"
@@ -1163,7 +1146,7 @@ export default function DashboardPage() {
                         placeholder='ej: SEGIP Monitor <alertas@segip.gob.bo>'
                         value={configData.smtpFrom}
                         onChange={(e) => setConfigData({ ...configData, smtpFrom: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                     <div>
@@ -1173,27 +1156,27 @@ export default function DashboardPage() {
                         placeholder="ej: noc@segip.gob.bo, soporte@segip.gob.bo"
                         value={configData.alertEmailTo}
                         onChange={(e) => setConfigData({ ...configData, alertEmailTo: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                   </div>
 
                   {/* Test Email Box */}
                   <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-2.5">
-                    <h4 className="text-xs font-bold text-[#790026]">Probar Envío de Correo SMTP</h4>
+                    <h4 className="text-xs font-bold text-[#245b87]">Probar Envío de Correo SMTP</h4>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="email"
                         placeholder="Correo destinatario para la prueba (ej: tu@segip.gob.bo)"
                         value={testEmailRecipient}
                         onChange={(e) => setTestEmailRecipient(e.target.value)}
-                        className="flex-1 px-3 py-1.5 bg-white border border-rose-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#790026]"
+                        className="flex-1 px-3 py-1.5 bg-white border border-rose-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-[#245b87]"
                       />
                       <button
                         type="button"
                         onClick={handleTestEmail}
                         disabled={testEmailLoading || !configData.smtpHost || !testEmailRecipient}
-                        className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+                        className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 bg-[#245b87] hover:bg-[#1b496d] text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
                       >
                         {testEmailLoading ? (
                           <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1235,7 +1218,7 @@ export default function DashboardPage() {
                 <button
                   type="submit"
                   disabled={configSaving}
-                  className="px-5 py-2 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#790026]/20 transition-all active:scale-[0.99] disabled:opacity-50"
+                  className="px-5 py-2 bg-[#245b87] hover:bg-[#1b496d] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#245b87]/20 transition-all active:scale-[0.99] disabled:opacity-50"
                 >
                   {configSaving ? 'Guardando...' : 'Guardar Configuración'}
                 </button>
@@ -1252,11 +1235,11 @@ export default function DashboardPage() {
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className={`bg-white border border-slate-200 rounded-3xl w-full p-6 shadow-2xl space-y-5 my-8 max-h-[92vh] overflow-y-auto relative ${(formData.type === 'API_JSON' || formData.type === 'LOGIN_CHECK') ? 'max-w-4xl' : 'max-w-2xl'
             }`}>
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#790026] via-[#B73852] to-[#16a34a]" />
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#245b87] via-[#B73852] to-[#16a34a]" />
 
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 pt-1">
               <div className="flex items-center space-x-2.5">
-                <Server className="w-5 h-5 text-[#790026]" />
+                <Server className="w-5 h-5 text-[#245b87]" />
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 leading-none">
                     {editingService ? 'Editar Servicio' : 'Añadir Nuevo Servicio de Monitoreo'}
@@ -1285,7 +1268,7 @@ export default function DashboardPage() {
                     placeholder="ej: API de Identificación SEGIP"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                   />
                 </div>
 
@@ -1294,7 +1277,7 @@ export default function DashboardPage() {
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                   >
                     <option value="WEB_INSTITUCIONAL">Web Institucional (HTTP 2xx)</option>
                     <option value="SISTEMA_WEB">Sistema Web (Validación de Keyword)</option>
@@ -1314,7 +1297,7 @@ export default function DashboardPage() {
                   {/* Postman-style URL + Method bar */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">URL del Endpoint *</label>
-                    <div className="flex items-stretch border border-slate-300 rounded-xl overflow-hidden bg-slate-50 focus-within:border-[#790026] focus-within:ring-1 focus-within:ring-[#790026] transition-all">
+                    <div className="flex items-stretch border border-slate-300 rounded-xl overflow-hidden bg-slate-50 focus-within:border-[#245b87] focus-within:ring-1 focus-within:ring-[#245b87] transition-all">
                       {/* Method selector */}
                       <div className="relative flex-shrink-0">
                         <select
@@ -1355,7 +1338,7 @@ export default function DashboardPage() {
                       <select
                         value={formData.groupId}
                         onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       >
                         <option value="">Sin grupo</option>
                         {groups.map((g) => (
@@ -1371,7 +1354,7 @@ export default function DashboardPage() {
                         max={86400}
                         value={formData.interval}
                         onChange={(e) => setFormData({ ...formData, interval: Number(e.target.value) })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                     <div>
@@ -1381,7 +1364,7 @@ export default function DashboardPage() {
                         min={100}
                         value={formData.slowThresholdMs}
                         onChange={(e) => setFormData({ ...formData, slowThresholdMs: Number(e.target.value) })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                   </div>
@@ -1389,14 +1372,14 @@ export default function DashboardPage() {
                   {/* LOGIN_CHECK specific fields */}
                   {formData.type === 'LOGIN_CHECK' && (
                     <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-2 text-xs">
-                      <p className="font-bold text-[#790026] text-[11px] uppercase tracking-wider">Validación Lógica de Login</p>
+                      <p className="font-bold text-[#245b87] text-[11px] uppercase tracking-wider">Validación Lógica de Login</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block text-[11px] text-slate-700 mb-1">Campo de Éxito (JSON field)</label>
                           <input type="text" placeholder="token o accessToken"
                             value={formData.loginSuccessField}
                             onChange={(e) => setFormData({ ...formData, loginSuccessField: e.target.value })}
-                            className="w-full px-2 py-1.5 bg-white border border-rose-200 rounded-lg text-[11px] focus:outline-none focus:border-[#790026]"
+                            className="w-full px-2 py-1.5 bg-white border border-rose-200 rounded-lg text-[11px] focus:outline-none focus:border-[#245b87]"
                           />
                         </div>
                         <div>
@@ -1404,7 +1387,7 @@ export default function DashboardPage() {
                           <input type="text" placeholder="invalid_credentials"
                             value={formData.loginFailureKeyword}
                             onChange={(e) => setFormData({ ...formData, loginFailureKeyword: e.target.value })}
-                            className="w-full px-2 py-1.5 bg-white border border-rose-200 rounded-lg text-[11px] focus:outline-none focus:border-[#790026]"
+                            className="w-full px-2 py-1.5 bg-white border border-rose-200 rounded-lg text-[11px] focus:outline-none focus:border-[#245b87]"
                           />
                         </div>
                       </div>
@@ -1423,14 +1406,14 @@ export default function DashboardPage() {
                     <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
                       <input type="checkbox" checked={formData.notifyTelegram}
                         onChange={(e) => setFormData({ ...formData, notifyTelegram: e.target.checked })}
-                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                        className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]"
                       />
                       <span>Notificar por Telegram</span>
                     </label>
                     <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
                       <input type="checkbox" checked={formData.notifyEmail}
                         onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.checked })}
-                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                        className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]"
                       />
                       <span>Notificar por Correo</span>
                     </label>
@@ -1458,7 +1441,7 @@ export default function DashboardPage() {
                       }
                       value={formData.url}
                       onChange={(e) => setFormData({ ...formData, url: e.target.value, host: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026] font-mono text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] font-mono text-xs"
                     />
                   </div>
 
@@ -1469,7 +1452,7 @@ export default function DashboardPage() {
                       <select
                         value={formData.groupId}
                         onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       >
                         <option value="">Sin grupo</option>
                         {groups.map((g) => (
@@ -1481,7 +1464,7 @@ export default function DashboardPage() {
                       <label className="block text-xs font-semibold text-slate-700 mb-1">Intervalo de Chequeo (seg)</label>
                       <input type="number" min={10} max={86400} value={formData.interval}
                         onChange={(e) => setFormData({ ...formData, interval: Number(e.target.value) })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#790026] focus:ring-1 focus:ring-[#790026]"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
                       />
                     </div>
                   </div>
@@ -1536,14 +1519,14 @@ export default function DashboardPage() {
                     <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
                       <input type="checkbox" checked={formData.notifyTelegram}
                         onChange={(e) => setFormData({ ...formData, notifyTelegram: e.target.checked })}
-                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                        className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]"
                       />
                       <span>Notificar por Telegram</span>
                     </label>
                     <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
                       <input type="checkbox" checked={formData.notifyEmail}
                         onChange={(e) => setFormData({ ...formData, notifyEmail: e.target.checked })}
-                        className="rounded border-slate-300 text-[#790026] focus:ring-[#790026]"
+                        className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]"
                       />
                       <span>Notificar por Correo</span>
                     </label>
@@ -1562,7 +1545,7 @@ export default function DashboardPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#790026]/20 transition-all active:scale-[0.99]"
+                  className="px-5 py-2 bg-[#245b87] hover:bg-[#1b496d] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#245b87]/20 transition-all active:scale-[0.99]"
                 >
                   {editingService ? 'Actualizar' : 'Guardar Servicio'}
                 </button>
@@ -1578,11 +1561,11 @@ export default function DashboardPage() {
       {isAiModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#790026] to-[#B73852]" />
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#245b87] to-[#B73852]" />
 
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 pt-1">
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-rose-50 text-[#790026] border border-rose-200">
+                <div className="p-2 rounded-xl bg-rose-50 text-[#245b87] border border-rose-200">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
@@ -1601,8 +1584,8 @@ export default function DashboardPage() {
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[160px] flex items-center justify-center">
               {aiLoading ? (
                 <div className="flex flex-col items-center space-y-3">
-                  <div className="w-8 h-8 border-3 border-[#790026] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs text-[#790026] font-medium animate-pulse">
+                  <div className="w-8 h-8 border-3 border-[#245b87] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs text-[#245b87] font-medium animate-pulse">
                     Analizando logs y respuesta técnica del servidor...
                   </p>
                 </div>
@@ -1616,7 +1599,7 @@ export default function DashboardPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setIsAiModalOpen(false)}
-                className="px-4 py-2 bg-[#790026] hover:bg-[#9c1b3e] text-white rounded-xl text-xs font-semibold shadow-md shadow-[#790026]/20"
+                className="px-4 py-2 bg-[#245b87] hover:bg-[#1b496d] text-white rounded-xl text-xs font-semibold shadow-md shadow-[#245b87]/20"
               >
                 Cerrar Diagnóstico
               </button>
@@ -1627,6 +1610,20 @@ export default function DashboardPage() {
 
       {/* Institutional Footer */}
       <footer className="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-500 bg-white/50">
+        <div className="max-w-3xl mx-auto mb-4 grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-slate-400">Servicios Monitoreados</p>
+            <p className="mt-1 text-sm font-bold text-slate-800">{services.length}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-slate-400">Uptime Global 24h</p>
+            <p className="mt-1 text-sm font-bold text-[#245b87]">{stats?.globalUptime || '100.00'}%</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wide text-slate-400">Latencia Promedio</p>
+            <p className="mt-1 text-sm font-bold text-slate-800">{stats?.avgResponseTime || 0} ms</p>
+          </div>
+        </div>
         <p className="font-semibold text-slate-700">
           Unidad Nacional de Explotación e Implementación de Aplicaciones Informáticas - SEGIP
         </p>
