@@ -505,8 +505,7 @@ export default function TvModePage() {
       {/* ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 z-10">
         {/* Total Services */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#245b87]" />
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
           <span className="text-xs text-slate-500 font-semibold">Total Servicios</span>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-3xl font-extrabold text-slate-900">{data?.summary.total || 0}</span>
@@ -515,8 +514,7 @@ export default function TvModePage() {
         </div>
 
         {/* UP Services */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#16a34a]" />
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
           <span className="text-xs text-[#16a34a] font-semibold flex items-center">
             <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Operativos
           </span>
@@ -527,8 +525,7 @@ export default function TvModePage() {
         </div>
 
         {/* Degraded Services */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#d97706]" />
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
           <span className="text-xs text-amber-600 font-semibold flex items-center">
             <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Ralentizados
           </span>
@@ -539,8 +536,7 @@ export default function TvModePage() {
         </div>
 
         {/* Down Services */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#BA1B1B]" />
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm">
           <span className="text-xs text-red-600 font-semibold flex items-center">
             <XCircle className="w-3.5 h-3.5 mr-1" /> Caídos
           </span>
@@ -560,13 +556,16 @@ export default function TvModePage() {
             {/* Category Header */}
             <div className="flex items-center space-x-2 border-b border-slate-200 pb-1">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }} />
-              <h2 className="text-[11px] font-bold tracking-wider uppercase text-slate-600">
-                {group.name} ({group.services.length})
+              <h2 className="font-bold text-xs uppercase tracking-wider text-slate-700">
+                {group.name}
               </h2>
+              <span className="text-[10px] text-slate-400 font-mono">
+                ({group.services.length})
+              </span>
             </div>
 
-            {/* Service Cards Grid — Ultra-compact high density */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2.5">
+            {/* Grid of service cards in this category — Reducido al 50% */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2">
               {group.services.map((svc) => {
                 const lastCheck = svc.checks[0];
                 const status = lastCheck?.status || 'UNKNOWN';
@@ -574,103 +573,89 @@ export default function TvModePage() {
                 const isDegraded = status === 'DEGRADED';
                 const isDown = status === 'DOWN' || status === 'TIMEOUT';
 
-                let cardBorder = 'border-slate-200 hover:border-[#245b87]/70';
-                let statusBadge = 'bg-emerald-50 text-[#16a34a] border-emerald-200';
-                let statusText = 'UP';
+                // Etiqueta y color del estado / código HTTP
+                const statusLabel = lastCheck?.httpCode
+                  ? `${lastCheck.httpCode}`
+                  : isUp
+                  ? 'OK'
+                  : isDegraded
+                  ? 'RAL'
+                  : isDown
+                  ? 'DOWN'
+                  : '---';
 
-                if (isDegraded) {
-                  cardBorder = 'border-amber-300 shadow-sm hover:border-amber-500';
-                  statusBadge = 'bg-amber-50 text-amber-700 border-amber-200';
-                  statusText = 'RAL';
-                } else if (isDown) {
-                  cardBorder = 'border-red-300 shadow-sm hover:border-red-500';
-                  statusBadge = 'bg-red-50 text-red-700 border-red-200';
-                  statusText = 'DOWN';
-                }
+                const statusBadgeCls = isUp
+                  ? 'bg-emerald-50 text-[#16a34a] border-emerald-200'
+                  : isDegraded
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-red-50 text-red-700 border-red-200';
 
                 return (
                   <div
                     key={svc.id}
                     onClick={() => setMetricsService(svc)}
-                    className={`rounded-xl p-2 bg-white border ${cardBorder} transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex flex-col justify-between group select-none relative overflow-hidden`}
+                    className="rounded-lg p-1.5 bg-white border border-slate-200 hover:border-[#245b87]/60 transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex flex-col justify-between group select-none"
                     title="Haz clic para ver métricas y gráficos detallados"
                   >
-                    {/* Top status accent line */}
-                    <div
-                      className={`absolute top-0 left-0 right-0 h-0.5 ${isUp ? 'bg-[#16a34a]' : isDegraded ? 'bg-amber-500' : 'bg-red-500'
-                        }`}
-                    />
-
                     <div>
-                      {/* Top row: Icon + Service Name & URL on left | Status Badge + Latency/Link under it on right */}
-                      <div className="flex items-start justify-between gap-1.5 mb-1">
-                        <div className="flex items-center space-x-1.5 min-w-0 flex-1">
-                          <div className="p-1 rounded-lg bg-slate-50 border border-slate-200/80 flex-shrink-0">
+                      {/* Top row: Icon + Service Name on left | Estado pintado + Latency & Chips on right */}
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <div className="flex items-center space-x-1 min-w-0 flex-1">
+                          <div className="p-0.5 rounded bg-slate-50 border border-slate-200/80 flex-shrink-0">
                             {getServiceIcon(svc.type)}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <h3
-                              className="font-bold text-xs text-slate-900 truncate tracking-tight group-hover:text-[#245b87] transition-colors leading-snug"
-                              title={svc.name}
-                            >
-                              {svc.name}
-                            </h3>
-                            <p className="text-[10px] font-mono text-slate-400 truncate leading-tight" title={svc.url}>
-                              {svc.host || svc.url.replace(/^https?:\/\//, '')}
-                            </p>
-                          </div>
+                          <h3
+                            className="font-bold text-[11px] text-slate-900 truncate tracking-tight group-hover:text-[#245b87] transition-colors leading-tight"
+                            title={svc.name}
+                          >
+                            {svc.name}
+                          </h3>
                         </div>
 
-                        {/* Status Badge + Info debajo de UP (latencia, chips, abrir card) */}
-                        <div className="flex flex-col items-end flex-shrink-0 space-y-0.5">
+                        {/* Right side: Estado coloreado + Latency & Chips */}
+                        <div className="flex items-center space-x-1 text-[9px] font-mono text-slate-600 flex-shrink-0">
+                          {/* Estado / Código HTTP con color de estado */}
                           <span
-                            className={`text-[10px] font-bold px-1.5 py-0.2 rounded border flex items-center space-x-1 ${statusBadge}`}
+                            className={`px-1 py-0 text-[9px] font-bold border rounded flex items-center space-x-0.5 ${statusBadgeCls}`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${isUp ? 'bg-[#16a34a]' : isDegraded ? 'bg-amber-500' : 'bg-red-500'
-                                }`}
+                              className={`w-1 h-1 rounded-full ${
+                                isUp ? 'bg-[#16a34a]' : isDegraded ? 'bg-amber-500' : 'bg-red-500'
+                              }`}
                             />
-                            <span>{statusText}</span>
+                            <span>{statusLabel}</span>
                           </span>
 
-                          <div className="flex items-center space-x-1 text-[10px] font-mono text-slate-600">
-                            <span className="font-bold text-slate-800">
-                              {lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'}
-                              <span className="text-[9px] text-slate-400 font-normal ml-0.5">ms</span>
+                          <span className="font-bold text-slate-800">
+                            {lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'}
+                            <span className="text-[8px] text-slate-400 font-normal ml-0.5">ms</span>
+                          </span>
+
+                          {lastCheck?.sslDaysLeft !== undefined && lastCheck?.sslDaysLeft !== null && (
+                            <span
+                              className={`px-1 py-0 text-[8px] font-semibold rounded ${lastCheck.sslDaysLeft < 15
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-rose-50 text-[#245b87] border border-rose-200'
+                                }`}
+                              title={`SSL válido por ${lastCheck.sslDaysLeft} días`}
+                            >
+                              SSL:{lastCheck.sslDaysLeft}d
                             </span>
+                          )}
 
-                            {lastCheck?.httpCode && (
-                              <span className="px-1 py-0 text-[9px] font-semibold bg-slate-100 border border-slate-200 rounded text-slate-600">
-                                {lastCheck.httpCode}
-                              </span>
-                            )}
+                          {lastCheck?.pingLoss !== undefined && lastCheck?.pingLoss !== null && lastCheck.pingLoss > 0 && (
+                            <span className="px-1 py-0 text-[8px] font-semibold text-amber-700 bg-amber-50 rounded">
+                              {lastCheck.pingLoss}%
+                            </span>
+                          )}
 
-                            {lastCheck?.sslDaysLeft !== undefined && lastCheck?.sslDaysLeft !== null && (
-                              <span
-                                className={`px-1 py-0 text-[9px] font-semibold rounded ${lastCheck.sslDaysLeft < 15
-                                  ? 'bg-red-50 text-red-700 border border-red-200'
-                                  : 'bg-rose-50 text-[#245b87] border border-rose-200'
-                                  }`}
-                                title={`SSL válido por ${lastCheck.sslDaysLeft} días`}
-                              >
-                                SSL:{lastCheck.sslDaysLeft}d
-                              </span>
-                            )}
-
-                            {lastCheck?.pingLoss !== undefined && lastCheck?.pingLoss !== null && lastCheck.pingLoss > 0 && (
-                              <span className="px-1 py-0 text-[9px] font-semibold text-amber-700 bg-amber-50 rounded">
-                                {lastCheck.pingLoss}%
-                              </span>
-                            )}
-
-                            <ExternalLink className="w-2.5 h-2.5 text-slate-300 group-hover:text-[#245b87] transition-colors ml-0.5" />
-                          </div>
+                          <ExternalLink className="w-2 h-2 text-slate-300 group-hover:text-[#245b87] transition-colors" />
                         </div>
                       </div>
 
-                      {/* Compact Sparkline with Interactive Points */}
+                      {/* Google Cloud Style Metrics Chart (Compact 32px) */}
                       <div className="mt-0.5">
-                        <TvServiceSparkline checks={svc.checks} height={24} />
+                        <TvServiceSparkline checks={svc.checks} height={32} />
                       </div>
                     </div>
                   </div>

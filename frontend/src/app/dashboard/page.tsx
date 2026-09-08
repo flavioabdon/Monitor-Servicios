@@ -37,6 +37,8 @@ import {
   EyeOff,
   BarChart2,
   ChevronDown,
+  FileText,
+  Download,
   X
 } from 'lucide-react';
 import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI, ConfigAPI, ReportScheduleAPI, ReportSchedule } from '@/lib/api';
@@ -98,6 +100,7 @@ export default function DashboardPage() {
   const [testEmailStatus, setTestEmailStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [testEmailRecipient, setTestEmailRecipient] = useState<string>('');
   const [reportLoading, setReportLoading] = useState<boolean>(false);
+  const [downloadingPdf, setDownloadingPdf] = useState<boolean>(false);
 
   // Report Schedules state
   const [reportSchedules, setReportSchedules] = useState<ReportSchedule[]>([]);
@@ -301,6 +304,17 @@ export default function DashboardPage() {
       alert(err.response?.data?.error || 'No se pudo enviar el reporte');
     } finally {
       setReportLoading(false);
+    }
+  };
+
+  const handleDownloadReportPDF = async () => {
+    try {
+      setDownloadingPdf(true);
+      await ConfigAPI.downloadReportPDF();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'No se pudo descargar el reporte PDF.');
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -1443,16 +1457,40 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {/* Envío manual */}
-                  <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3">
-                    <p className="text-xs text-amber-800 font-medium">¿Probar ahora? Envía un reporte manual inmediato.</p>
+                  {/* Envío manual y Descargar reporte PDF */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-slate-700 font-medium">
+                        ¿Probar ahora? Envía un reporte manual inmediato.
+                      </p>
+                      <div className="mt-1 flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={handleDownloadReportPDF}
+                          disabled={downloadingPdf}
+                          className="inline-flex items-center space-x-1 text-xs text-[#245b87] hover:text-[#1b496d] font-semibold underline underline-offset-2 hover:opacity-90 disabled:opacity-50 transition-colors"
+                        >
+                          {downloadingPdf ? (
+                            <div className="w-3 h-3 border-2 border-[#245b87] border-t-transparent rounded-full animate-spin mr-1" />
+                          ) : (
+                            <Download className="w-3.5 h-3.5 mr-1 text-[#245b87]" />
+                          )}
+                          <span>descargar reporte (PDF)</span>
+                        </button>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={handleSendReport}
                       disabled={reportLoading}
-                      className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50 shrink-0"
+                      className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50 shrink-0"
                     >
-                      {reportLoading ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      {reportLoading ? (
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
                       <span>Enviar ahora</span>
                     </button>
                   </div>

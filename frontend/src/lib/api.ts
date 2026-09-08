@@ -85,6 +85,20 @@ export const ConfigAPI = {
     testRecipient: string;
   }) => api.post('/config/notifications/test-email', data).then((res) => res.data),
   sendReport: (interval?: string) => api.post('/config/notifications/report', { interval }).then((res) => res.data),
+  downloadReportPDF: async (interval = '24h') => {
+    const res = await api.get(`/config/notifications/report/pdf?interval=${interval}`, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([res.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Reporte-SEGIP-${interval}-${new Date().toISOString().slice(0, 10)}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export interface ReportSchedule {

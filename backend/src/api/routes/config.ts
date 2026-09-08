@@ -7,6 +7,7 @@ import {
   sendEmail,
   sendScheduledReport,
 } from '../../notifiers';
+import { generateReportPDF } from '../../notifiers/pdfReport';
 import { logger } from '../../utils/logger';
 
 export const configRouter = Router();
@@ -83,6 +84,25 @@ configRouter.post('/notifications/report', async (req: Request, res: Response) =
   } catch (err: any) {
     logger.error('Error sending service report:', err);
     res.status(400).json({ error: `No se pudo enviar el reporte: ${err.message || 'Error desconocido'}` });
+  }
+});
+
+/**
+ * GET /api/config/notifications/report/pdf
+ * Generates and downloads an executive PDF report for the given interval (default 24h).
+ */
+configRouter.get('/notifications/report/pdf', async (req: Request, res: Response) => {
+  try {
+    const interval = (req.query.interval as string) || '24h';
+    const { buffer, filename } = await generateReportPDF(interval);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
+  } catch (err: any) {
+    logger.error('Error generating PDF report:', err);
+    res.status(500).json({ error: `No se pudo generar el reporte PDF: ${err.message || 'Error desconocido'}` });
   }
 });
 
