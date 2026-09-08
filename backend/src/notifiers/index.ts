@@ -20,11 +20,9 @@ export interface NotificationConfigData {
   smtpPass?: string;
   smtpFrom?: string;
   alertEmailTo?: string;
+
+  // Interruptor global de reportes (los horarios individuales viven en ReportSchedule)
   reportEnabled: boolean;
-  reportTimes: string;
-  reportInterval: string;
-  reportTelegram: boolean;
-  reportEmail: boolean;
 }
 
 let cachedConfig: NotificationConfigData | null = null;
@@ -51,10 +49,6 @@ export async function getNotificationConfig(): Promise<NotificationConfigData> {
         smtpFrom: config.smtpFrom || process.env.SMTP_FROM || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
         alertEmailTo: config.alertEmailTo || process.env.ALERT_EMAIL_TO || '',
         reportEnabled: config.reportEnabled,
-        reportTimes: config.reportTimes,
-        reportInterval: config.reportInterval,
-        reportTelegram: config.reportTelegram,
-        reportEmail: config.reportEmail,
       };
       return cachedConfig;
     }
@@ -76,10 +70,6 @@ export async function getNotificationConfig(): Promise<NotificationConfigData> {
     smtpFrom: process.env.SMTP_FROM || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
     alertEmailTo: process.env.ALERT_EMAIL_TO || '',
     reportEnabled: false,
-    reportTimes: '08:00',
-    reportInterval: '24h',
-    reportTelegram: true,
-    reportEmail: false,
   };
   return cachedConfig;
 }
@@ -102,10 +92,6 @@ export async function saveNotificationConfig(data: Partial<NotificationConfigDat
       smtpFrom: data.smtpFrom !== undefined ? data.smtpFrom : current.smtpFrom,
       alertEmailTo: data.alertEmailTo !== undefined ? data.alertEmailTo : current.alertEmailTo,
       reportEnabled: data.reportEnabled ?? current.reportEnabled,
-      reportTimes: data.reportTimes !== undefined ? data.reportTimes : current.reportTimes,
-      reportInterval: data.reportInterval !== undefined ? data.reportInterval : current.reportInterval,
-      reportTelegram: data.reportTelegram ?? current.reportTelegram,
-      reportEmail: data.reportEmail ?? current.reportEmail,
     },
     create: {
       id: 'default',
@@ -121,10 +107,6 @@ export async function saveNotificationConfig(data: Partial<NotificationConfigDat
       smtpFrom: data.smtpFrom || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
       alertEmailTo: data.alertEmailTo || '',
       reportEnabled: data.reportEnabled ?? false,
-      reportTimes: data.reportTimes || '08:00',
-      reportInterval: data.reportInterval || '24h',
-      reportTelegram: data.reportTelegram ?? true,
-      reportEmail: data.reportEmail ?? false,
     },
   });
 
@@ -357,7 +339,10 @@ const reportIntervals: Record<string, number> = {
   '30d': 24 * 30,
 };
 
-export async function sendScheduledReport(interval = '24h'): Promise<void> {
+export async function sendScheduledReport(
+  interval = '24h',
+  channels?: { telegram?: boolean; email?: boolean }
+): Promise<void> {
   const config = await getNotificationConfig();
   const hours = reportIntervals[interval] || reportIntervals['24h'];
   const to = new Date();
@@ -394,8 +379,12 @@ export async function sendScheduledReport(interval = '24h'): Promise<void> {
   const emailHtml = `<div style="font-family:Arial,sans-serif;max-width:1000px;margin:auto"><h2>${title}</h2><p>Periodo: ${from.toLocaleString('es-BO')} - ${to.toLocaleString('es-BO')}</p><table style="width:100%;border-collapse:collapse"><thead><tr><th>Servicio</th><th>Disponibilidad</th><th>Degradaciones</th><th>Caídas</th><th>Horas degradado</th><th>Horas caído</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:12px">SEGIP Monitor - Reporte automático</p></div>`;
   const recipients = config.alertEmailTo || '';
 
-  if (config.reportTelegram && config.telegramEnabled) await sendTelegram(telegramMessage.slice(0, 3900));
-  if (config.reportEmail && config.emailEnabled && recipients) await sendEmail(recipients, `[SEGIP] ${title}`, emailHtml);
+  // Canales: si se pasan por parámetro se usan, si no se envía sólo por Telegram por defecto
+  const useTelegram = channels !== undefined ? (channels.telegram ?? false) : true;
+  const useEmail = channels !== undefined ? (channels.email ?? false) : false;
+
+  if (useTelegram && config.telegramEnabled) await sendTelegram(telegramMessage.slice(0, 3900));
+  if (useEmail && config.emailEnabled && recipients) await sendEmail(recipients, `[SEGIP] ${title}`, emailHtml);
   logger.info(`Service report generated for ${interval}`);
 }
 

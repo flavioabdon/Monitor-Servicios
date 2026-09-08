@@ -34,10 +34,6 @@ configRouter.get('/notifications', async (req: Request, res: Response) => {
       smtpFrom: config.smtpFrom,
       alertEmailTo: config.alertEmailTo,
       reportEnabled: config.reportEnabled,
-      reportTimes: config.reportTimes,
-      reportInterval: config.reportInterval,
-      reportTelegram: config.reportTelegram,
-      reportEmail: config.reportEmail,
     });
   } catch (err: any) {
     logger.error('Error fetching notification config:', err);
@@ -67,10 +63,6 @@ configRouter.put('/notifications', async (req: Request, res: Response) => {
         smtpFrom: updated.smtpFrom,
         alertEmailTo: updated.alertEmailTo,
         reportEnabled: updated.reportEnabled,
-        reportTimes: updated.reportTimes,
-        reportInterval: updated.reportInterval,
-        reportTelegram: updated.reportTelegram,
-        reportEmail: updated.reportEmail,
       },
     });
   } catch (err: any) {
@@ -85,8 +77,8 @@ configRouter.put('/notifications', async (req: Request, res: Response) => {
  */
 configRouter.post('/notifications/report', async (req: Request, res: Response) => {
   try {
-    const config = await getNotificationConfig();
-    await sendScheduledReport(req.body.interval || config.reportInterval);
+    // Use the interval from the request body, or default to '24h'
+    await sendScheduledReport(req.body.interval || '24h');
     res.json({ success: true, message: 'Reporte generado y enviado correctamente' });
   } catch (err: any) {
     logger.error('Error sending service report:', err);

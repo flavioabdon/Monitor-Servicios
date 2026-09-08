@@ -208,11 +208,26 @@ model SystemConfig {
   smtpFrom          String?  @default("SEGIP Monitor <notificaciones@segip.gob.bo>")
   alertEmailTo      String?
 
+  // Interruptor global de reportes (si es false ningún ReportSchedule se ejecuta)
   reportEnabled     Boolean  @default(false)
-  reportTimes       String   @default("08:00")
-  reportInterval    String   @default("24h")
-  reportTelegram    Boolean  @default(true)
-  reportEmail       Boolean  @default(false)
 
   updatedAt         DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// Horarios de reportes periódicos
+// ─────────────────────────────────────────────
+
+model ReportSchedule {
+  id           String   @id @default(cuid())
+  label        String?                       // Etiqueta descriptiva, ej: "Reporte matutino"
+  time         String                        // Hora en formato HH:mm, ej: "08:00"
+  interval     String   @default("24h")      // "1h" | "6h" | "12h" | "24h" | "7d" | "30d"
+  enabled      Boolean  @default(true)
+  sendTelegram Boolean  @default(true)
+  sendEmail    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([enabled])
 }

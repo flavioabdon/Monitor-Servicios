@@ -288,7 +288,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
               >
                 <option value="ALL">Todos los Estados ({historyData?.summary?.total || 0})</option>
                 <option value="UP">Solo Operativos (UP)</option>
-                <option value="DEGRADED">Solo Degradados (DEGRADED)</option>
+                <option value="DEGRADED">Solo Ralentizados (DEGRADED)</option>
                 <option value="DOWN">Solo Caídos / Timeout (DOWN)</option>
               </select>
             </div>
@@ -532,7 +532,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
                                 : 'bg-red-400'
                             }`}
                           />
-                          <span>{hoveredPoint.status}</span>
+                          <span>{hoveredPoint.status === 'DEGRADED' ? 'RALENTIZADO' : hoveredPoint.status}</span>
                           <span className="text-slate-400">&bull;</span>
                           <span className="text-yellow-400">{hoveredPoint.responseTime ?? '--'} ms</span>
                         </div>
@@ -584,7 +584,7 @@ export const ServiceMetricsModal: React.FC<ServiceMetricsModalProps> = ({
                               : 'text-red-700'
                           }
                         >
-                          {selectedPoint.status}
+                          {selectedPoint.status === 'DEGRADED' ? 'RALENTIZADO' : selectedPoint.status}
                         </span>
                       </div>
                     </div>

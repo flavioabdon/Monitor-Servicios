@@ -86,3 +86,27 @@ export const ConfigAPI = {
   }) => api.post('/config/notifications/test-email', data).then((res) => res.data),
   sendReport: (interval?: string) => api.post('/config/notifications/report', { interval }).then((res) => res.data),
 };
+
+export interface ReportSchedule {
+  id: string;
+  label: string | null;
+  time: string;         // "HH:mm"
+  interval: string;     // "1h" | "6h" | "12h" | "24h" | "7d" | "30d"
+  enabled: boolean;
+  sendTelegram: boolean;
+  sendEmail: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const ReportScheduleAPI = {
+  list: (): Promise<ReportSchedule[]> =>
+    api.get('/report-schedules').then((res) => res.data),
+  create: (data: Omit<ReportSchedule, 'id' | 'createdAt' | 'updatedAt'>): Promise<ReportSchedule> =>
+    api.post('/report-schedules', data).then((res) => res.data),
+  update: (id: string, data: Partial<Omit<ReportSchedule, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ReportSchedule> =>
+    api.put(`/report-schedules/${id}`, data).then((res) => res.data),
+  delete: (id: string): Promise<void> =>
+    api.delete(`/report-schedules/${id}`).then((res) => res.data),
+};
+

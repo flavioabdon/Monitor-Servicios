@@ -24,15 +24,22 @@ export function initScheduler() {
     await loadAndScheduleServices();
   });
 
-  // Check configured report times every minute (server local timezone).
+  // Check ReportSchedule table every minute and fire matching schedules.
   cron.schedule('* * * * *', async () => {
     const config = await getNotificationConfig();
     if (!config.reportEnabled) return;
-    const currentTime = new Date().toTimeString().slice(0, 5);
-    const configuredTimes = config.reportTimes.split(',').map((time) => time.trim());
-    if (configuredTimes.includes(currentTime)) {
-      logger.info(`Sending service report scheduled for ${currentTime}...`);
-      await sendScheduledReport(config.reportInterval);
+
+    const currentTime = new Date().toTimeString().slice(0, 5); // "HH:mm"
+    const dueSchedules = await prisma.reportSchedule.findMany({
+      where: { enabled: true, time: currentTime },
+    });
+
+    for (const schedule of dueSchedules) {
+      logger.info(`Sending report schedule "${schedule.label ?? schedule.id}" at ${currentTime} (interval: ${schedule.interval})...`);
+      await sendScheduledReport(schedule.interval, {
+        telegram: schedule.sendTelegram,
+        email: schedule.sendEmail,
+      });
     }
   });
 

@@ -39,7 +39,7 @@ import {
   ChevronDown,
   X
 } from 'lucide-react';
-import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI, ConfigAPI } from '@/lib/api';
+import { ServiceAPI, StatsAPI, GroupAPI, AlertAPI, ConfigAPI, ReportScheduleAPI, ReportSchedule } from '@/lib/api';
 import SegipLogo from '@/components/SegipLogo';
 import ServiceMetricsModal from '@/components/ServiceMetricsModal';
 import PostmanRequestBuilder, {
@@ -89,10 +89,6 @@ export default function DashboardPage() {
     smtpFrom: 'SEGIP Monitor <notificaciones@segip.gob.bo>',
     alertEmailTo: '',
     reportEnabled: false,
-    reportTimes: '08:00',
-    reportInterval: '24h',
-    reportTelegram: true,
-    reportEmail: false,
   });
 
   // Test notification states
@@ -102,6 +98,21 @@ export default function DashboardPage() {
   const [testEmailStatus, setTestEmailStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [testEmailRecipient, setTestEmailRecipient] = useState<string>('');
   const [reportLoading, setReportLoading] = useState<boolean>(false);
+
+  // Report Schedules state
+  const [reportSchedules, setReportSchedules] = useState<ReportSchedule[]>([]);
+  const [schedulesLoading, setSchedulesLoading] = useState<boolean>(false);
+  const [showNewScheduleForm, setShowNewScheduleForm] = useState<boolean>(false);
+  const [newSchedule, setNewSchedule] = useState({
+    label: '',
+    time: '08:00',
+    interval: '24h',
+    sendTelegram: true,
+    sendEmail: false,
+  });
+  const [savingSchedule, setSavingSchedule] = useState<boolean>(false);
+  const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(null);
+  const [togglingScheduleId, setTogglingScheduleId] = useState<string | null>(null);
 
   // Service Form State
   const [formData, setFormData] = useState({
@@ -168,16 +179,24 @@ export default function DashboardPage() {
         smtpFrom: cfg.smtpFrom || 'SEGIP Monitor <notificaciones@segip.gob.bo>',
         alertEmailTo: cfg.alertEmailTo || '',
         reportEnabled: cfg.reportEnabled ?? false,
-        reportTimes: cfg.reportTimes || '08:00',
-        reportInterval: cfg.reportInterval || '24h',
-        reportTelegram: cfg.reportTelegram ?? true,
-        reportEmail: cfg.reportEmail ?? false,
       });
       if (cfg.alertEmailTo && !testEmailRecipient) {
         setTestEmailRecipient(cfg.alertEmailTo.split(',')[0].trim());
       }
     } catch (err) {
       console.error('Error fetching notification config:', err);
+    }
+  };
+
+  const fetchReportSchedules = async () => {
+    try {
+      setSchedulesLoading(true);
+      const data = await ReportScheduleAPI.list();
+      setReportSchedules(data);
+    } catch (err) {
+      console.error('Error fetching report schedules:', err);
+    } finally {
+      setSchedulesLoading(false);
     }
   };
 
@@ -202,9 +221,10 @@ export default function DashboardPage() {
   };
 
   const handleOpenConfigModal = async () => {
-    await fetchNotificationConfig();
+    await Promise.all([fetchNotificationConfig(), fetchReportSchedules()]);
     setTestTelegramStatus(null);
     setTestEmailStatus(null);
+    setShowNewScheduleForm(false);
     setIsConfigModalOpen(true);
   };
 
@@ -275,7 +295,7 @@ export default function DashboardPage() {
   const handleSendReport = async () => {
     try {
       setReportLoading(true);
-      const res = await ConfigAPI.sendReport(configData.reportInterval);
+      const res = await ConfigAPI.sendReport();
       alert(res.message || 'Reporte enviado correctamente.');
     } catch (err: any) {
       alert(err.response?.data?.error || 'No se pudo enviar el reporte');
@@ -508,7 +528,7 @@ export default function DashboardPage() {
       const res = await StatsAPI.analyzeWithOllama({
         serviceId: svc.id,
         httpCode: lastCheck?.httpCode,
-        errorMessage: lastCheck?.error || (lastCheck?.status === 'DEGRADED' ? 'Fallo lógico o degradación detectada' : 'Error en respuesta'),
+        errorMessage: lastCheck?.error || (lastCheck?.status === 'DEGRADED' ? 'Fallo lógico o ralentización detectada' : 'Error en respuesta'),
         bodySnippet: lastCheck?.bodySnippet || '',
       });
       setAiAnalysis(res.analysis);
@@ -637,7 +657,7 @@ export default function DashboardPage() {
           <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-[#d97706]" />
             <span className="text-xs text-amber-600 font-semibold flex items-center">
-              <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Degradados
+              <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Ralentizados
             </span>
             <div className="text-2xl font-bold text-amber-600 mt-2">
               {services.filter((s) => s.checks?.[0]?.status === 'DEGRADED').length}
@@ -693,7 +713,7 @@ export default function DashboardPage() {
             >
               <option value="ALL">Todos los Estados</option>
               <option value="UP">Operativos (UP)</option>
-              <option value="DEGRADED">Degradados (DEGRADED)</option>
+              <option value="DEGRADED">Ralentizados (DEGRADED)</option>
               <option value="DOWN">Caídos (DOWN / TIMEOUT)</option>
             </select>
           </div>
@@ -774,7 +794,7 @@ export default function DashboardPage() {
                           {isDegraded && (
                             <span className="inline-flex items-center space-x-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full text-xs font-bold">
                               <span className="w-2 h-2 rounded-full bg-amber-500" />
-                              <span>DEGRADED</span>
+                              <span>RALENTIZADO</span>
                             </span>
                           )}
                           {isDown && (
@@ -941,7 +961,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-slate-900 leading-none">Configuración de Alertas & Notificaciones</h2>
-                  <p className="text-xs text-slate-500 mt-1">Gestione los canales de aviso institucional ante caídas o degradaciones</p>
+                  <p className="text-xs text-slate-500 mt-1">Gestione los canales de aviso institucional ante caídas o ralentizaciones</p>
                 </div>
               </div>
               <button
@@ -1244,10 +1264,11 @@ export default function DashboardPage() {
 
               {configTab === 'report' && (
                 <div className="space-y-4">
+                  {/* Switch global */}
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-slate-900 text-sm">Activar reportes automáticos</h3>
-                      <p className="text-xs text-slate-500">Resume todos los servicios, sus degradaciones y caídas del periodo elegido.</p>
+                      <h3 className="font-bold text-slate-900 text-sm">Reportes automáticos</h3>
+                      <p className="text-xs text-slate-500">Interruptor global — si está desactivado ningún horario se ejecutará.</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -1260,53 +1281,179 @@ export default function DashboardPage() {
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Hora(s) de envío</label>
-                      <input
-                        type="text"
-                        placeholder="08:00, 20:00"
-                        value={configData.reportTimes}
-                        onChange={(e) => setConfigData({ ...configData, reportTimes: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
-                      />
-                      <p className="text-[11px] text-slate-500 mt-1">Formato de 24 horas; separa varias horas con coma.</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Intervalo del informe</label>
-                      <select
-                        value={configData.reportInterval}
-                        onChange={(e) => setConfigData({ ...configData, reportInterval: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-xs focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
+                  {/* Lista de horarios */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Horarios programados</h4>
+                      <button
+                        type="button"
+                        onClick={() => { setShowNewScheduleForm(true); fetchReportSchedules(); }}
+                        className="inline-flex items-center space-x-1 px-3 py-1.5 bg-[#245b87] hover:bg-[#1a4a70] text-white rounded-xl text-xs font-semibold shadow-sm transition-all"
                       >
-                        <option value="1h">Última hora</option>
-                        <option value="6h">Últimas 6 horas</option>
-                        <option value="12h">Últimas 12 horas</option>
-                        <option value="24h">Últimas 24 horas</option>
-                        <option value="7d">Últimos 7 días</option>
-                        <option value="30d">Últimos 30 días</option>
-                      </select>
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Agregar horario</span>
+                      </button>
                     </div>
+
+                    {schedulesLoading ? (
+                      <div className="flex justify-center py-6">
+                        <div className="w-5 h-5 border-2 border-[#245b87] border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : reportSchedules.length === 0 ? (
+                      <div className="text-center py-6 text-xs text-slate-400">
+                        No hay horarios configurados. Agrega uno con el botón de arriba.
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden">
+                        {reportSchedules.map((sch) => (
+                          <div key={sch.id} className={`flex items-center gap-3 px-4 py-3 text-xs transition-colors ${sch.enabled ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
+                            {/* Hora */}
+                            <span className="font-mono font-bold text-[#245b87] text-sm w-12 shrink-0">{sch.time}</span>
+                            {/* Etiqueta e intervalo */}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-800 truncate">{sch.label || 'Sin etiqueta'}</p>
+                              <p className="text-slate-400">
+                                Últimas {sch.interval} &bull;
+                                {sch.sendTelegram && <span className="ml-1 text-blue-500">Telegram</span>}
+                                {sch.sendEmail && <span className="ml-1 text-amber-500">Email</span>}
+                              </p>
+                            </div>
+                            {/* Toggle habilitado */}
+                            <button
+                              type="button"
+                              disabled={togglingScheduleId === sch.id}
+                              onClick={async () => {
+                                setTogglingScheduleId(sch.id);
+                                try {
+                                  const updated = await ReportScheduleAPI.update(sch.id, { enabled: !sch.enabled });
+                                  setReportSchedules((prev) => prev.map((s) => s.id === sch.id ? updated : s));
+                                } catch { /* ignore */ } finally { setTogglingScheduleId(null); }
+                              }}
+                              className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${sch.enabled ? 'bg-[#245b87]' : 'bg-slate-300'}`}
+                            >
+                              <span className={`absolute top-0.5 h-4 w-4 bg-white rounded-full shadow transition-transform ${sch.enabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                            </button>
+                            {/* Eliminar */}
+                            <button
+                              type="button"
+                              disabled={deletingScheduleId === sch.id}
+                              onClick={async () => {
+                                if (!confirm('¿Eliminar este horario?')) return;
+                                setDeletingScheduleId(sch.id);
+                                try {
+                                  await ReportScheduleAPI.delete(sch.id);
+                                  setReportSchedules((prev) => prev.filter((s) => s.id !== sch.id));
+                                } catch { /* ignore */ } finally { setDeletingScheduleId(null); }
+                              }}
+                              className="text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                            >
+                              {deletingScheduleId === sch.id
+                                ? <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-3">
-                    <h4 className="text-xs font-bold text-amber-900">Canales del reporte</h4>
-                    <label className="flex items-center space-x-2 text-xs text-slate-700 font-medium">
-                      <input type="checkbox" checked={configData.reportTelegram} onChange={(e) => setConfigData({ ...configData, reportTelegram: e.target.checked })} className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]" />
-                      <span>Enviar por Telegram</span>
-                    </label>
-                    <label className="flex items-center space-x-2 text-xs text-slate-700 font-medium">
-                      <input type="checkbox" checked={configData.reportEmail} onChange={(e) => setConfigData({ ...configData, reportEmail: e.target.checked })} className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]" />
-                      <span>Enviar por correo a los destinatarios globales</span>
-                    </label>
+                  {/* Formulario nuevo horario */}
+                  {showNewScheduleForm && (
+                    <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 space-y-3">
+                      <h4 className="text-xs font-bold text-blue-900">Nuevo horario de reporte</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Etiqueta (opcional)</label>
+                          <input
+                            type="text"
+                            placeholder="Ej: Reporte nocturno"
+                            value={newSchedule.label}
+                            onChange={(e) => setNewSchedule({ ...newSchedule, label: e.target.value })}
+                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Hora (HH:mm)</label>
+                          <input
+                            type="time"
+                            value={newSchedule.time}
+                            onChange={(e) => setNewSchedule({ ...newSchedule, time: e.target.value })}
+                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Intervalo del reporte</label>
+                          <select
+                            value={newSchedule.interval}
+                            onChange={(e) => setNewSchedule({ ...newSchedule, interval: e.target.value })}
+                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87]"
+                          >
+                            <option value="1h">Última hora</option>
+                            <option value="6h">Últimas 6 horas</option>
+                            <option value="12h">Últimas 12 horas</option>
+                            <option value="24h">Últimas 24 horas</option>
+                            <option value="7d">Últimos 7 días</option>
+                            <option value="30d">Últimos 30 días</option>
+                          </select>
+                        </div>
+                        <div className="flex flex-col justify-center gap-2">
+                          <label className="flex items-center space-x-2 text-xs text-slate-700 font-medium">
+                            <input type="checkbox" checked={newSchedule.sendTelegram} onChange={(e) => setNewSchedule({ ...newSchedule, sendTelegram: e.target.checked })} className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]" />
+                            <span>Telegram</span>
+                          </label>
+                          <label className="flex items-center space-x-2 text-xs text-slate-700 font-medium">
+                            <input type="checkbox" checked={newSchedule.sendEmail} onChange={(e) => setNewSchedule({ ...newSchedule, sendEmail: e.target.checked })} className="rounded border-slate-300 text-[#245b87] focus:ring-[#245b87]" />
+                            <span>Email</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <button type="button" onClick={() => setShowNewScheduleForm(false)} className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-colors">
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          disabled={savingSchedule || !newSchedule.time}
+                          onClick={async () => {
+                            setSavingSchedule(true);
+                            try {
+                              const created = await ReportScheduleAPI.create({
+                                label: newSchedule.label.trim() || null,
+                                time: newSchedule.time,
+                                interval: newSchedule.interval,
+                                enabled: true,
+                                sendTelegram: newSchedule.sendTelegram,
+                                sendEmail: newSchedule.sendEmail,
+                              });
+                              setReportSchedules((prev) => [...prev, created].sort((a, b) => a.time.localeCompare(b.time)));
+                              setNewSchedule({ label: '', time: '08:00', interval: '24h', sendTelegram: true, sendEmail: false });
+                              setShowNewScheduleForm(false);
+                            } catch (err: any) {
+                              alert(err.response?.data?.error || 'Error al guardar el horario');
+                            } finally {
+                              setSavingSchedule(false);
+                            }
+                          }}
+                          className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#245b87] hover:bg-[#1a4a70] text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+                        >
+                          {savingSchedule ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                          <span>Guardar horario</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Envío manual */}
+                  <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3">
+                    <p className="text-xs text-amber-800 font-medium">¿Probar ahora? Envía un reporte manual inmediato.</p>
                     <button
                       type="button"
                       onClick={handleSendReport}
-                      disabled={reportLoading || (!configData.reportTelegram && !configData.reportEmail)}
-                      className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+                      disabled={reportLoading}
+                      className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-50 shrink-0"
                     >
                       {reportLoading ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      <span>Enviar reporte ahora</span>
+                      <span>Enviar ahora</span>
                     </button>
                   </div>
                 </div>
@@ -1610,7 +1757,7 @@ export default function DashboardPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Palabra Inesperada (Marca Degradado)</label>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Palabra Inesperada (Marca Ralentizado)</label>
                         <input type="text" placeholder="ej: Database error o 500"
                           value={formData.unexpectedKeyword}
                           onChange={(e) => setFormData({ ...formData, unexpectedKeyword: e.target.value })}

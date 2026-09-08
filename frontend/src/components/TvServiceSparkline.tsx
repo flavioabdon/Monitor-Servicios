@@ -55,8 +55,11 @@ export default function TvServiceSparkline({ checks, height = 40 }: TvServiceSpa
 
   if (pointsData.length === 0) {
     return (
-      <div className="h-9 w-full flex items-center justify-center bg-slate-50/60 rounded-lg border border-dashed border-slate-200 text-[10px] text-slate-400 font-mono">
-        <Clock className="w-3 h-3 mr-1 opacity-50" /> Sin registros
+      <div
+        style={{ height }}
+        className="w-full flex items-center justify-center bg-slate-50/60 rounded border border-dashed border-slate-200 text-[9px] text-slate-400 font-mono"
+      >
+        <Clock className="w-2.5 h-2.5 mr-1 opacity-50" /> Sin registros
       </div>
     );
   }

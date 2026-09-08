@@ -764,7 +764,7 @@ export default function PostmanRequestBuilder({
         {activeTab === 'validation' && (
           <div className="space-y-4">
             <p className="text-[11px] text-slate-500">
-              Define las condiciones de éxito para la respuesta. El monitor marcará el servicio como <b>DEGRADED</b> o <b>DOWN</b> si no se cumplen.
+              Define las condiciones de éxito para la respuesta. El monitor marcará el servicio como <b>RALENTIZADO</b> o <b>DOWN</b> si no se cumplen.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -784,7 +784,7 @@ export default function PostmanRequestBuilder({
                     ))}
                   </select>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1">Si la respuesta difiere → DEGRADED</p>
+                <p className="text-[10px] text-slate-500 mt-1">Si la respuesta difiere → RALENTIZADO</p>
               </div>
 
               {/* Timeout */}
@@ -818,7 +818,7 @@ export default function PostmanRequestBuilder({
                   onChange={(e) => set({ expectedKeyword: e.target.value })}
                   className={inputCls}
                 />
-                <p className="text-[10px] text-slate-500 mt-1">Si no contiene este texto → DEGRADED</p>
+                <p className="text-[10px] text-slate-500 mt-1">Si no contiene este texto → RALENTIZADO</p>
               </div>
 
               {/* Unexpected keyword */}
@@ -833,7 +833,7 @@ export default function PostmanRequestBuilder({
                   onChange={(e) => set({ unexpectedKeyword: e.target.value })}
                   className={inputCls}
                 />
-                <p className="text-[10px] text-slate-500 mt-1">Si el body contiene esto → DEGRADED</p>
+                <p className="text-[10px] text-slate-500 mt-1">Si el body contiene esto → RALENTIZADO</p>
               </div>
             </div>
 

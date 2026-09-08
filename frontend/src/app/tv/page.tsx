@@ -9,7 +9,6 @@ import {
   Clock,
   Maximize2,
   Minimize2,
-  Zap,
   ShieldCheck,
   Server,
   Globe,
@@ -504,7 +503,7 @@ export default function TvModePage() {
       {/* ───────────────────────────────────────────────────────────── */}
       {/* KPI METRIC CARDS */}
       {/* ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5 z-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 z-10">
         {/* Total Services */}
         <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-[#245b87]" />
@@ -531,7 +530,7 @@ export default function TvModePage() {
         <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-[#d97706]" />
           <span className="text-xs text-amber-600 font-semibold flex items-center">
-            <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Degradados
+            <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Ralentizados
           </span>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-3xl font-extrabold text-amber-600">{data?.summary.degraded || 0}</span>
@@ -548,28 +547,6 @@ export default function TvModePage() {
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-3xl font-extrabold text-red-600">{data?.summary.down || 0}</span>
             {data?.summary.down ? <div className="w-3 h-3 rounded-full bg-[#BA1B1B] live-indicator-down" /> : null}
-          </div>
-        </div>
-
-        {/* Average Latency */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-500" />
-          <span className="text-xs text-slate-500 font-semibold flex items-center">
-            <Zap className="w-3.5 h-3.5 mr-1 text-yellow-500" /> Latencia Prom.
-          </span>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="text-3xl font-extrabold text-slate-800">{data?.summary.avgResponseTime || 0}</span>
-            <span className="text-xs text-slate-400">ms</span>
-          </div>
-        </div>
-
-        {/* Global Uptime */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#B73852]" />
-          <span className="text-xs text-slate-500 font-semibold">Uptime Global</span>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="text-3xl font-extrabold text-[#245b87]">{data?.summary.uptimePercent || 100}%</span>
-            <span className="text-xs text-[#16a34a] font-semibold">SLA OK</span>
           </div>
         </div>
       </div>
@@ -604,7 +581,7 @@ export default function TvModePage() {
                 if (isDegraded) {
                   cardBorder = 'border-amber-300 shadow-sm hover:border-amber-500';
                   statusBadge = 'bg-amber-50 text-amber-700 border-amber-200';
-                  statusText = 'DEG';
+                  statusText = 'RAL';
                 } else if (isDown) {
                   cardBorder = 'border-red-300 shadow-sm hover:border-red-500';
                   statusBadge = 'bg-red-50 text-red-700 border-red-200';
@@ -615,7 +592,7 @@ export default function TvModePage() {
                   <div
                     key={svc.id}
                     onClick={() => setMetricsService(svc)}
-                    className={`rounded-2xl p-2.5 bg-white border ${cardBorder} transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex flex-col justify-between group select-none relative overflow-hidden`}
+                    className={`rounded-xl p-2 bg-white border ${cardBorder} transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex flex-col justify-between group select-none relative overflow-hidden`}
                     title="Haz clic para ver métricas y gráficos detallados"
                   >
                     {/* Top status accent line */}
@@ -625,22 +602,27 @@ export default function TvModePage() {
                     />
 
                     <div>
-                      {/* Top row: Icon + Service Name + Status Badge & Latency */}
-                      <div className="flex items-start justify-between gap-1 mb-1">
+                      {/* Top row: Icon + Service Name & URL on left | Status Badge + Latency/Link under it on right */}
+                      <div className="flex items-start justify-between gap-1.5 mb-1">
                         <div className="flex items-center space-x-1.5 min-w-0 flex-1">
                           <div className="p-1 rounded-lg bg-slate-50 border border-slate-200/80 flex-shrink-0">
                             {getServiceIcon(svc.type)}
                           </div>
-                          <h3
-                            className="font-bold text-xs text-slate-900 truncate tracking-tight group-hover:text-[#245b87] transition-colors"
-                            title={svc.name}
-                          >
-                            {svc.name}
-                          </h3>
+                          <div className="min-w-0 flex-1">
+                            <h3
+                              className="font-bold text-xs text-slate-900 truncate tracking-tight group-hover:text-[#245b87] transition-colors leading-snug"
+                              title={svc.name}
+                            >
+                              {svc.name}
+                            </h3>
+                            <p className="text-[10px] font-mono text-slate-400 truncate leading-tight" title={svc.url}>
+                              {svc.host || svc.url.replace(/^https?:\/\//, '')}
+                            </p>
+                          </div>
                         </div>
 
-                        {/* Status + Latency Badge */}
-                        <div className="flex items-center space-x-1 flex-shrink-0">
+                        {/* Status Badge + Info debajo de UP (latencia, chips, abrir card) */}
+                        <div className="flex flex-col items-end flex-shrink-0 space-y-0.5">
                           <span
                             className={`text-[10px] font-bold px-1.5 py-0.2 rounded border flex items-center space-x-1 ${statusBadge}`}
                           >
@@ -650,56 +632,45 @@ export default function TvModePage() {
                             />
                             <span>{statusText}</span>
                           </span>
+
+                          <div className="flex items-center space-x-1 text-[10px] font-mono text-slate-600">
+                            <span className="font-bold text-slate-800">
+                              {lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'}
+                              <span className="text-[9px] text-slate-400 font-normal ml-0.5">ms</span>
+                            </span>
+
+                            {lastCheck?.httpCode && (
+                              <span className="px-1 py-0 text-[9px] font-semibold bg-slate-100 border border-slate-200 rounded text-slate-600">
+                                {lastCheck.httpCode}
+                              </span>
+                            )}
+
+                            {lastCheck?.sslDaysLeft !== undefined && lastCheck?.sslDaysLeft !== null && (
+                              <span
+                                className={`px-1 py-0 text-[9px] font-semibold rounded ${lastCheck.sslDaysLeft < 15
+                                  ? 'bg-red-50 text-red-700 border border-red-200'
+                                  : 'bg-rose-50 text-[#245b87] border border-rose-200'
+                                  }`}
+                                title={`SSL válido por ${lastCheck.sslDaysLeft} días`}
+                              >
+                                SSL:{lastCheck.sslDaysLeft}d
+                              </span>
+                            )}
+
+                            {lastCheck?.pingLoss !== undefined && lastCheck?.pingLoss !== null && lastCheck.pingLoss > 0 && (
+                              <span className="px-1 py-0 text-[9px] font-semibold text-amber-700 bg-amber-50 rounded">
+                                {lastCheck.pingLoss}%
+                              </span>
+                            )}
+
+                            <ExternalLink className="w-2.5 h-2.5 text-slate-300 group-hover:text-[#245b87] transition-colors ml-0.5" />
+                          </div>
                         </div>
                       </div>
 
-                      {/* URL / Endpoint Host */}
-                      <p className="text-[10px] font-mono text-slate-400 truncate mb-1" title={svc.url}>
-                        {svc.host || svc.url.replace(/^https?:\/\//, '')}
-                      </p>
-
                       {/* Compact Sparkline with Interactive Points */}
-                      <div className="my-1">
-                        <TvServiceSparkline checks={svc.checks} height={36} />
-                      </div>
-                    </div>
-
-                    {/* Compact Footer Submetrics */}
-                    <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-600">
-                      {/* Latency */}
-                      <div className="flex items-center space-x-0.5 font-bold text-slate-800">
-                        <Zap className="w-3 h-3 text-yellow-500" />
-                        <span>{lastCheck?.responseTime ?? lastCheck?.pingAvg ?? '--'}</span>
-                        <span className="text-[9px] text-slate-400 font-normal">ms</span>
-                      </div>
-
-                      {/* Chips row */}
-                      <div className="flex items-center space-x-1 overflow-hidden">
-                        {lastCheck?.httpCode && (
-                          <span className="px-1 py-0.2 text-[9px] font-semibold bg-slate-100 border border-slate-200 rounded text-slate-600">
-                            {lastCheck.httpCode}
-                          </span>
-                        )}
-
-                        {lastCheck?.sslDaysLeft !== undefined && lastCheck?.sslDaysLeft !== null && (
-                          <span
-                            className={`px-1 py-0.2 text-[9px] font-semibold rounded ${lastCheck.sslDaysLeft < 15
-                              ? 'bg-red-50 text-red-700 border border-red-200'
-                              : 'bg-rose-50 text-[#245b87] border border-rose-200'
-                              }`}
-                          >
-                            SSL:{lastCheck.sslDaysLeft}d
-                          </span>
-                        )}
-
-                        {lastCheck?.pingLoss !== undefined && lastCheck?.pingLoss !== null && lastCheck.pingLoss > 0 && (
-                          <span className="px-1 py-0.2 text-[9px] font-semibold text-amber-700 bg-amber-50 rounded">
-                            {lastCheck.pingLoss}%
-                          </span>
-                        )}
-
-                        {/* Hint Icon on Hover */}
-                        <ExternalLink className="w-3 h-3 text-slate-300 group-hover:text-[#245b87] transition-colors ml-0.5" />
+                      <div className="mt-0.5">
+                        <TvServiceSparkline checks={svc.checks} height={24} />
                       </div>
                     </div>
                   </div>
@@ -721,7 +692,7 @@ export default function TvModePage() {
           </span>
           <span className="flex items-center space-x-1.5 text-[11px]">
             <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>Degradado / Alerta Lógica</span>
+            <span>Ralentizado / Alerta Lógica</span>
           </span>
           <span className="flex items-center space-x-1.5 text-[11px]">
             <span className="w-2 h-2 rounded-full bg-[#BA1B1B]" />
