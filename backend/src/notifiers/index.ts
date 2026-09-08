@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+import TelegramBot = require('node-telegram-bot-api');
 import nodemailer from 'nodemailer';
 import { Service, Alert } from '@prisma/client';
 import { prisma } from '../db/client';

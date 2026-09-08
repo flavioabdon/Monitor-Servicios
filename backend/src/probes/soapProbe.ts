@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import https from 'https';
 import { XMLParser } from 'fast-xml-parser';
 import { Service, CheckStatus } from '@prisma/client';
 import { ProbeResult } from './httpProbe';
@@ -19,6 +20,7 @@ export async function soapWsdlProbe(service: Service): Promise<ProbeResult> {
   try {
     const res = await axios.get(wsdlUrl, {
       timeout: service.timeout,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       headers: {
         Accept: 'text/xml,application/xml,application/wsdl+xml,*/*',
         ...((service.headers as Record<string, string>) || {}),
@@ -101,6 +103,7 @@ export async function soapOperacionProbe(service: Service): Promise<ProbeResult>
   try {
     const res = await axios.post(service.url, service.soapEnvelope, {
       timeout: service.timeout,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       headers: {
         'Content-Type': 'text/xml;charset=UTF-8',
         SOAPAction: service.soapAction || '""',

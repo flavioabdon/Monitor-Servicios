@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import https from 'https';
 import { Service, CheckStatus } from '@prisma/client';
 import { logger } from '../utils/logger';
 
@@ -21,6 +22,7 @@ export async function webInstitucionalProbe(service: Service): Promise<ProbeResu
     const res = await axios.get(service.url, {
       timeout: service.timeout,
       maxRedirects: service.followRedirects ? 5 : 0,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       validateStatus: () => true, // don't throw on non-2xx
       headers: (service.headers as Record<string, string>) || {},
       responseType: 'text',
@@ -81,6 +83,7 @@ export async function apiJsonProbe(service: Service): Promise<ProbeResult> {
       method: (service.method as any) || 'GET',
       url: service.url,
       timeout: service.timeout,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',

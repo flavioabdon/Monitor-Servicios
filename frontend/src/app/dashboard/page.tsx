@@ -790,6 +790,10 @@ export default function DashboardPage() {
                     const isDegraded = status === 'DEGRADED';
                     const isDown = status === 'DOWN' || status === 'TIMEOUT';
                     const isProbing = probingIds[svc.id];
+                    const sslDaysLeft = lastCheck?.sslDaysLeft;
+                    const hasSslStatus = typeof sslDaysLeft === 'number';
+                    const isSslExpired = hasSslStatus && sslDaysLeft <= 0;
+                    const isSslExpiring = hasSslStatus && sslDaysLeft > 0 && sslDaysLeft <= 30;
 
                     return (
                       <tr
@@ -821,6 +825,24 @@ export default function DashboardPage() {
                             <span className="inline-flex items-center space-x-1.5 bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200">
                               <span>PENDIENTE</span>
                             </span>
+                          )}
+                          {isSslExpired && (
+                            <div
+                              className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-bold text-red-700"
+                              title={lastCheck?.error || 'El certificado SSL está vencido'}
+                            >
+                              <AlertTriangle className="h-3.5 w-3.5" />
+                              <span>SSL VENCIDO</span>
+                            </div>
+                          )}
+                          {isSslExpiring && (
+                            <div
+                              className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700"
+                              title={lastCheck?.error || 'El certificado SSL está próximo a vencer'}
+                            >
+                              <AlertTriangle className="h-3.5 w-3.5" />
+                              <span>SSL VENCE PRONTO</span>
+                            </div>
                           )}
                         </td>
 
@@ -879,8 +901,10 @@ export default function DashboardPage() {
                           {lastCheck?.httpCode && (
                             <div className="text-[11px] text-slate-500">HTTP {lastCheck.httpCode}</div>
                           )}
-                          {lastCheck?.sslDaysLeft !== undefined && lastCheck?.sslDaysLeft !== null && (
-                            <div className="text-[11px] text-[#245b87] font-semibold">SSL: {lastCheck.sslDaysLeft} días</div>
+                          {hasSslStatus && (
+                            <div className={`text-[11px] font-semibold ${isSslExpired ? 'text-red-700' : isSslExpiring ? 'text-amber-700' : 'text-[#245b87]'}`}>
+                              SSL: {sslDaysLeft} días
+                            </div>
                           )}
                         </td>
 

@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import https from 'https';
 import { Service, CheckStatus } from '@prisma/client';
 import { ProbeResult } from './httpProbe';
 
@@ -30,6 +31,7 @@ export async function loginCheckProbe(service: Service): Promise<ProbeResult> {
       method: (service.method as any) || 'POST',
       url: service.url,
       timeout: service.timeout,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',

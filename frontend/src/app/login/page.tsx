@@ -9,10 +9,19 @@ import SegipLogo from '@/components/SegipLogo';
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [authType, setAuthType] = useState<'local' | 'institutional'>('local');
+  const [localUsername, setLocalUsername] = useState('');
+  const [localPassword, setLocalPassword] = useState('');
+  const [showLocalLogin, setShowLocalLogin] = useState(false);
   const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const router = useRouter();
+
+  const authenticate = async (type: 'local' | 'institutional') => {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+      return axios.post(`${backendUrl}/api/auth/login`, { username, password, authType: type });
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,8 +29,19 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-      const res = await axios.post(`${backendUrl}/api/auth/login`, { username, password, authType });
+      let res;
+      try {
+        res = await authenticate('institutional');
+      } catch (err: any) {
+        const institutionalUnavailable = err.response?.status === 503
+          && err.response?.data?.code === 'INSTITUTIONAL_AUTH_UNAVAILABLE';
+
+        if (!institutionalUnavailable) throw err;
+
+        setLocalError('');
+        setShowLocalLogin(true);
+        return;
+      }
 
       localStorage.setItem('segip_token', res.data.token);
       localStorage.setItem('segip_user', res.data.username);
@@ -31,6 +51,29 @@ export default function LoginPage() {
       setError(err.response?.data?.error || 'Credenciales inválidas o servidor no disponible');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLocalLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError('');
+    setLocalLoading(true);
+
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+      const res = await axios.post(`${backendUrl}/api/auth/login`, {
+        username: localUsername,
+        password: localPassword,
+        authType: 'local',
+      });
+
+      localStorage.setItem('segip_token', res.data.token);
+      localStorage.setItem('segip_user', res.data.username);
+      router.push('/dashboard');
+    } catch (err: any) {
+      setLocalError(err.response?.data?.error || 'Credenciales locales inválidas');
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -96,23 +139,6 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setAuthType('local')}
-                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'local' ? 'bg-white text-[#245b87] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                Usuario local
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthType('institutional')}
-                className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all ${authType === 'institutional' ? 'bg-white text-[#245b87] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                Usuario institucional
-              </button>
-            </div>
-
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Usuario
@@ -127,7 +153,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#245b87] focus:ring-1 focus:ring-[#245b87] transition-all text-sm"
-                  placeholder={authType === 'institutional' ? 'usuario institucional' : ''}
+                  placeholder="u.común"
                 />
               </div>
             </div>
@@ -191,6 +217,79 @@ export default function LoginPage() {
           Servicio General de Identificación Personal &bull; SEGIP &copy; {new Date().getFullYear()}
         </p>
       </footer>
+
+      {showLocalLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-7 shadow-2xl">
+            <div className="mb-5 flex items-start space-x-3">
+              <div className="mt-0.5 rounded-xl bg-amber-50 p-2 text-amber-600">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Servidor institucional desconectado</h2>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                  Puede continuar utilizando un usuario local para ingresar al monitor.
+                </p>
+              </div>
+            </div>
+
+            {localError && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                {localError}
+              </div>
+            )}
+
+            <form onSubmit={handleLocalLogin} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">Usuario local</label>
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    value={localUsername}
+                    onChange={(e) => setLocalUsername(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:border-[#245b87] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#245b87]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">Contraseña</label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="password"
+                    required
+                    value={localPassword}
+                    onChange={(e) => setLocalPassword(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:border-[#245b87] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#245b87]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowLocalLogin(false)}
+                  className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={localLoading}
+                  className="flex items-center justify-center space-x-2 rounded-xl bg-[#245b87] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#245b87]/20 transition-all hover:bg-[#1b496d] disabled:opacity-50"
+                >
+                  {localLoading && <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                  <span>Iniciar con usuario local</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

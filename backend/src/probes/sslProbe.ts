@@ -53,10 +53,8 @@ export async function sslProbe(service: Service): Promise<SslResult> {
         let error: string | undefined;
 
         if (daysLeft <= 0) {
-          status = 'DOWN';
           error = `SSL certificate EXPIRED on ${expiryDate.toISOString().split('T')[0]}`;
         } else if (daysLeft <= alertDays) {
-          status = 'DEGRADED';
           error = `SSL certificate expires in ${daysLeft} days (${expiryDate.toISOString().split('T')[0]})`;
         }
 

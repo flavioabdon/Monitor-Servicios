@@ -48,8 +48,17 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       const token = createToken(`institutional:${username}`, username);
       res.json({ token, username, authType: 'institutional' });
       return;
-    } catch {
-      res.status(401).json({ error: 'Institutional authentication unavailable or invalid' });
+    } catch (error: any) {
+      const serverUnavailable = !error.response || ['ECONNABORTED', 'ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT'].includes(error.code);
+      if (serverUnavailable) {
+        res.status(503).json({
+          code: 'INSTITUTIONAL_AUTH_UNAVAILABLE',
+          error: 'El servidor de autenticación institucional está desconectado',
+        });
+        return;
+      }
+
+      res.status(401).json({ error: 'Credenciales institucionales inválidas' });
       return;
     }
   }

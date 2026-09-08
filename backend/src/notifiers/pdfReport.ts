@@ -205,7 +205,7 @@ export async function generateReportPDF(interval = '24h'): Promise<{ buffer: Buf
 
       serviceStats.forEach((stat: ServiceStat, idx: number) => {
         // Paginación si nos acercamos al final
-        if (curY > pageHeight - 65) {
+        if (curY + 18 > pageHeight - 55) {
           doc.addPage();
           curY = margin;
           // Re-dibujar header de tabla en nueva página
@@ -278,60 +278,78 @@ export async function generateReportPDF(interval = '24h'): Promise<{ buffer: Buf
       });
 
       // ─────────────────────────────────────────────────────────────
-      // 4. SECCIÓN DE INCIDENTES (SI HUBO CAÍDAS O RALENTIZACIONES)
+      // 4. ANEXOS DETALLADOS DE CAÍDAS Y RALENTIZACIONES
       // ─────────────────────────────────────────────────────────────
-      const servicesWithIncidents = serviceStats.filter(
-        (s: ServiceStat) => s.degradedChecks.length > 0 || s.downChecks.length > 0
-      );
+      const renderIncidentSection = (
+        title: string,
+        incidents: Array<{ service: Service; check: Check }>,
+        color: string,
+        background: string
+      ) => {
+        if (incidents.length === 0) return;
 
-      if (servicesWithIncidents.length > 0) {
-        if (curY > pageHeight - 90) {
-          doc.addPage();
-          curY = margin;
-        } else {
-          curY += 15;
-        }
-
+        doc.addPage();
+        curY = margin;
         doc.fillColor('#1e293b').fontSize(10).font('Helvetica-Bold');
-        doc.text('REGISTRO DE INCIDENCIAS EN EL PERIODO', margin, curY);
-        curY += 15;
+        doc.text(title, margin, curY);
+        curY += 18;
 
-        servicesWithIncidents.forEach((s: ServiceStat) => {
-          if (curY > pageHeight - 50) {
+        const headers = ['SERVICIO', 'FECHA Y HORA', 'ESTADO', 'LATENCIA', 'HTTP', 'DETALLE'];
+        const widths = [145, 105, 58, 58, 42, 132];
+        const drawHeader = () => {
+          doc.rect(margin, curY, contentWidth, 18).fill('#245b87');
+          let headerX = margin + 5;
+          doc.fillColor('#ffffff').fontSize(7).font('Helvetica-Bold');
+          headers.forEach((header, index) => {
+            doc.text(header, headerX, curY + 5, { width: widths[index] });
+            headerX += widths[index];
+          });
+          curY += 18;
+        };
+
+        drawHeader();
+        incidents.forEach(({ service, check }, index) => {
+          const detail = check.error || check.bodySnippet || 'Sin detalle adicional';
+          const detailText = detail.replace(/\s+/g, ' ').slice(0, 90);
+          const rowHeight = 26;
+          if (curY + rowHeight > pageHeight - 55) {
             doc.addPage();
             curY = margin;
+            drawHeader();
           }
 
-          doc.rect(margin, curY, contentWidth, 16).fill('#fef2f2').stroke('#fecaca');
-          doc.fillColor('#991b1b').fontSize(7.5).font('Helvetica-Bold');
-          doc.text(`• ${s.service.name}:`, margin + 6, curY + 4);
-
-          const incidentDetails: string[] = [];
-          if (s.downChecks.length > 0) {
-            const downHours = s.downChecks
-              .slice(0, 3)
-              .map((c: Check) => new Date(c.timestamp).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' }))
-              .join(', ');
-            incidentDetails.push(
-              `Caídas (${s.downChecks.length}): a horas [${downHours}${s.downChecks.length > 3 ? '…' : ''}]`
-            );
-          }
-          if (s.degradedChecks.length > 0) {
-            const degHours = s.degradedChecks
-              .slice(0, 3)
-              .map((c: Check) => new Date(c.timestamp).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' }))
-              .join(', ');
-            incidentDetails.push(
-              `Ralentizaciones (${s.degradedChecks.length}): a horas [${degHours}${s.degradedChecks.length > 3 ? '…' : ''}]`
-            );
-          }
-
-          doc.fillColor('#7f1d1d').fontSize(7).font('Helvetica');
-          doc.text(incidentDetails.join(' | '), margin + 180, curY + 4);
-
-          curY += 18;
+          doc.rect(margin, curY, contentWidth, rowHeight)
+            .fill(index % 2 === 0 ? background : '#ffffff')
+            .stroke('#e2e8f0');
+          const values = [
+            service.name.slice(0, 24),
+            new Date(check.timestamp).toLocaleString('es-BO'),
+            check.status,
+            check.responseTime || check.pingAvg ? `${Math.round(check.responseTime || check.pingAvg || 0)} ms` : '--',
+            check.httpCode ? `${check.httpCode}` : '--',
+            detailText,
+          ];
+          let rowX = margin + 5;
+          values.forEach((value, valueIndex) => {
+            doc.fillColor(valueIndex === 2 ? color : '#334155')
+              .fontSize(6.8)
+              .font(valueIndex === 2 ? 'Helvetica-Bold' : 'Helvetica');
+            doc.text(value, rowX, curY + 9, { width: widths[valueIndex], ellipsis: true });
+            rowX += widths[valueIndex];
+          });
+          curY += rowHeight;
         });
-      }
+      };
+
+      const downIncidents = serviceStats.flatMap((stat) =>
+        stat.downChecks.map((check) => ({ service: stat.service, check }))
+      );
+      const degradedIncidents = serviceStats.flatMap((stat) =>
+        stat.degradedChecks.map((check) => ({ service: stat.service, check }))
+      );
+
+      renderIncidentSection('REPORTE DETALLADO DE CAÍDAS', downIncidents, '#b91c1c', '#fef2f2');
+      renderIncidentSection('REPORTE DETALLADO DE SERVICIOS RALENTIZADOS', degradedIncidents, '#b45309', '#fffbeb');
 
       // ─────────────────────────────────────────────────────────────
       // 5. FOOTER INSTITUCIONAL EN TODAS LAS PÁGINAS

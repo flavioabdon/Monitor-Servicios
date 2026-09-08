@@ -46,7 +46,15 @@ servicesRouter.get('/', async (_req: AuthRequest, res: Response) => {
       checks: {
         orderBy: { timestamp: 'desc' },
         take: 1,
-        select: { status: true, responseTime: true, timestamp: true, httpCode: true },
+        select: {
+          status: true,
+          responseTime: true,
+          timestamp: true,
+          httpCode: true,
+          sslDaysLeft: true,
+          sslExpiry: true,
+          error: true,
+        },
       },
       alerts: {
         where: { resolvedAt: null },
